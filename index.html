@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>영단어 & 회화 몬스터 던전 배틀 RPG (300선)</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel-bg: #1e293b;
+      --card-bg: #283548;
+      --text: #f8fafc;
+      --primary: #38bdf8;
+      --secondary: #a855f7;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --gold: #fbbf24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: radial-gradient(circle at top, #172033 0%, var(--bg) 75%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 14px 32px;
+    }
+
+    /* ================= 헤더 영역 ================= */
+    .header {
+      text-align: center;
+      margin-bottom: 14px;
+      width: 100%;
+      max-width: 780px;
+    }
+    .header h2 {
+      font-size: 1.5rem;
+      letter-spacing: -0.5px;
+      color: #f8fafc;
+      text-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+    }
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+    .badge-sub {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      box-shadow: none;
+    }
+
+    /* 토스트 알림 */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      border: 2px solid var(--gold);
+      color: #f8fafc;
+      padding: 11px 22px;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.65);
+      z-index: 10000;
+      transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      text-align: center;
+      max-width: 90vw;
+    }
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ================= 메인 앱 컨테이너 ================= */
+    .app-container {
+      width: 100%;
+      max-width: 780px;
+    }
+
+    /* 입장 화면 */
+    .login-box {
+      max-width: 470px;
+      margin: 24px auto;
+      background: var(--panel-bg);
+      padding: 30px 26px;
+      border-radius: 18px;
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.45);
+    }
+    .hero-emblem {
+      font-size: 3.2rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(251, 191, 36, 0.4));
+    }
+    .login-guide {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.65;
+      text-align: left;
+      border-left: 4px solid var(--gold);
+    }
+    input[type="text"] {
+      padding: 13px;
+      font-size: 1.05rem;
+      border-radius: 10px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+    button.action-btn {
+      padding: 14px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      color: #081226;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
+      transition: all 0.15s;
+    }
+    button.action-btn:hover { opacity: 0.94; transform: translateY(-2px); }
+    button.action-btn:active { transform: translateY(0); }
+
+    /* ================= 던전 RPG 메인 패널 ================= */
+    .game-content {
+      width: 100%;
+      background: var(--panel-bg);
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid #334155;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    }
+
+    /* 상단 상태바 (4칸) */
+    .learner-profile-card {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #334155;
+    }
+    @media (max-width: 580px) {
+      .learner-profile-card {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .stat-box {
+      background: #1e293b;
+      padding: 8px 10px;
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.74rem;
+      color: #94a3b8;
+      margin-bottom: 2px;
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #f8fafc;
+    }
+    .stat-value.name-val {
+      color: var(--primary);
+      max-width: 135px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .stat-value.score-val {
+      color: var(--gold);
+      transition: color 0.2s;
+    }
+    .stat-value.score-down {
+      color: var(--danger) !important;
+    }
+
+    /* 던전 모드 선택 탭 */
+    .mode-selector-bar {
+      display: flex;
+      gap: 6px;
+      background: #0f172a;
+      padding: 5px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .mode-btn {
+      flex: 1;
+      min-width: 135px;
+      padding: 9px 8px;
+      font-size: 0.83rem;
+      font-weight: 800;
+      background: transparent;
+      color: #94a3b8;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover {
+      color: #f8fafc;
+      background: #1e293b;
+    }
+    .mode-btn.active {
+      background: #334155;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* 스테이지 안내 및 도감 버튼 바 */
+    .stage-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .stage-banner.vocab-stage {
+      background: rgba(56, 189, 248, 0.14);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      color: #bae6fd;
+    }
+    .stage-banner.conv-stage {
+      background: rgba(168, 85, 247, 0.16);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      color: #e9d5ff;
+    }
+    .study-book-btn {
+      background: #334155;
+      color: #f8fafc;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .study-book-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ================= 시각적 배틀 아레나 (Dungeon Stage) ================= */
+    .battle-arena {
+      position: relative;
+      width: 100%;
+      border-radius: 14px;
+      padding: 16px 14px 14px;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, #1a103c 0%, #1e1b4b 55%, #0f172a 100%);
+      border: 2px solid #3b3363;
+      overflow: hidden;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+    }
+    .battle-arena.boss-arena {
+      background: linear-gradient(180deg, #3b0d1e 0%, #2a1029 55%, #0f172a 100%);
+      border-color: #ef4444;
+      box-shadow: inset 0 0 35px rgba(239, 68, 68, 0.35);
+    }
+
+    .arena-bg-stars {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.22) 1px, transparent 1px);
+      background-size: 26px 26px;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .arena-top-hud {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    .stage-pill {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #6366f1;
+      color: #c7d2fe;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+    .stage-pill.boss-pill {
+      border-color: #f87171;
+      color: #fecaca;
+      background: rgba(127, 29, 29, 0.85);
+    }
+    .combo-badge {
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 900;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.45);
+      transform: scale(1);
+      transition: transform 0.15s;
+    }
+    .combo-badge.pop {
+      transform: scale(1.18);
+    }
+
+    .combatants-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 6px 8px 4px;
+      min-height: 138px;
+    }
+    .combatant-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .hp-panel {
+      width: 100%;
+      max-width: 190px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px 8px;
+      margin-bottom: 8px;
+    }
+    .hp-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .hp-track {
+      width: 100%;
+      height: 8px;
+      background: #090d16;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .hp-bar {
+      height: 100%;
+      width: 100%;
+      transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .hero-hp-bar {
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+    .monster-hp-bar {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+
+    .sprite-stage {
+      position: relative;
+      width: 96px;
+      height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-svg {
+      width: 84px;
+      height: 84px;
+      animation: idleFloat 2.2s ease-in-out infinite;
+      filter: drop-shadow(0 6px 10px rgba(56, 189, 248, 0.35));
+    }
+    .monster-svg {
+      width: 88px;
+      height: 88px;
+      animation: monsterBounce 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 6px 12px rgba(239, 68, 68, 0.4));
+    }
+
+    @keyframes idleFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    @keyframes monsterBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-6px) scale(1.03); }
+    }
+
+    .hero-attack-anim {
+      animation: heroDash 0.42s ease-out !important;
+    }
+    @keyframes heroDash {
+      0% { transform: translateX(0) scale(1); }
+      40% { transform: translateX(70px) scale(1.15); }
+      100% { transform: translateX(0) scale(1); }
+    }
+
+    .monster-attack-anim {
+      animation: monsterLunge 0.42s ease-out !important;
+    }
+    @keyframes monsterLunge {
+      0% { transform: translateX(0) scale(1); }
+      40% { transform: translateX(-70px) scale(1.18); }
+      100% { transform: translateX(0) scale(1); }
+    }
+
+    .hit-shake {
+      animation: shakeHit 0.38s ease-in-out !important;
+      filter: brightness(2.2) saturate(2) drop-shadow(0 0 14px #ef4444) !important;
+    }
+    @keyframes shakeHit {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-10px) rotate(-6deg); }
+      40% { transform: translateX(10px) rotate(6deg); }
+      60% { transform: translateX(-8px) rotate(-4deg); }
+      80% { transform: translateX(8px) rotate(4deg); }
+    }
+
+    .arena-shake {
+      animation: arenaRecoil 0.35s ease-in-out;
+    }
+    @keyframes arenaRecoil {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-6px, 3px); }
+      50% { transform: translate(6px, -3px); }
+      75% { transform: translate(-4px, 2px); }
+    }
+
+    .vs-fx-zone {
+      position: absolute;
+      left: 50%;
+      top: 56%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .slash-fx {
+      font-size: 2.6rem;
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    .slash-fx.active {
+      animation: slashPop 0.45s ease-out forwards;
+    }
+    @keyframes slashPop {
+      0% { opacity: 1; transform: scale(0.5) rotate(-25deg); }
+      50% { opacity: 1; transform: scale(1.35) rotate(10deg); }
+      100% { opacity: 0; transform: scale(1.6) rotate(20deg); }
+    }
+
+    .floating-dmg {
+      position: absolute;
+      top: -10px;
+      font-size: 1.25rem;
+      font-weight: 900;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+      white-space: nowrap;
+    }
+    .floating-dmg.show-dmg {
+      animation: floatUpDmg 0.75s ease-out forwards;
+    }
+    @keyframes floatUpDmg {
+      0% { opacity: 1; transform: translateY(0) scale(0.85); }
+      30% { opacity: 1; transform: translateY(-16px) scale(1.15); }
+      100% { opacity: 0; transform: translateY(-38px) scale(1); }
+    }
+
+    /* ================= 몬스터 영창 (질문 / 제시어 카드) ================= */
+    .quest-scroll-box {
+      background: #0f172a;
+      border: 2px solid #475569;
+      border-left: 5px solid var(--primary);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .quest-scroll-box.conv-mode-box {
+      border-left-color: var(--secondary);
+    }
+    .quest-type-label {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .quest-scroll-box.conv-mode-box .quest-type-label {
+      color: #d8b4fe;
+    }
+    .quest-main-text {
+      font-size: 1.32rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.42;
+      word-break: keep-all;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.15s, transform 0.1s;
+    }
+    .quest-main-text:hover {
+      color: var(--primary);
+    }
+    .quest-main-text:active {
+      transform: scale(0.99);
+    }
+    .speak-icon-badge {
+      font-size: 1rem;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 8px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+    }
+    .quest-hint-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+    .btn-toggle-meaning {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-toggle-meaning:hover {
+      background: rgba(56, 189, 248, 0.18);
+    }
+    .quiz-meaning-text {
+      display: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .quiz-meaning-text.visible {
+      display: inline-block;
+    }
+
+    /* ================= 3지선다 스킬 공격 버튼 리스트 ================= */
+    .skill-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .skill-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #334155 0%, #263244 100%);
+      border: 2px solid #475569;
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #f8fafc;
+      font-size: 1.04rem;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      line-height: 1.4;
+      word-break: keep-all;
+      box-shadow: 0 3px 0 #1e293b;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+    }
+    .skill-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: linear-gradient(180deg, #3d4f69 0%, #2e3d54 100%);
+      transform: translateY(-2px);
+    }
+    .skill-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .skill-btn-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .skill-key-badge {
+      flex: 0 0 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+    .skill-text-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .skill-ko-hint {
+      display: none;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .skill-ko-hint.visible {
+      display: block;
+    }
+    .btn-opt-meaning {
+      flex-shrink: 0;
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #38bdf8;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-opt-meaning:hover {
+      background: rgba(56, 189, 248, 0.2);
+    }
+
+    .skill-btn.correct {
+      background: linear-gradient(135deg, #065f46, #047857) !important;
+      border-color: var(--success) !important;
+      color: #ecfdf5 !important;
+    }
+    .skill-btn.correct .skill-key-badge {
+      background: var(--success);
+      color: #052e16;
+      border-color: var(--success);
+    }
+    .skill-btn.wrong {
+      background: linear-gradient(135deg, #7f1d1d, #991b1b) !important;
+      border-color: var(--danger) !important;
+      color: #fecaca !important;
+    }
+    .skill-btn.wrong .skill-key-badge {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    /* 스테이지 클리어 / 게임 오버 결과 배너 */
+    .stage-result-box {
+      display: none;
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 14px;
+      background: rgba(34, 197, 94, 0.14);
+      border: 2px solid rgba(34, 197, 94, 0.55);
+      text-align: center;
+    }
+    .stage-result-box.defeat-box {
+      background: rgba(239, 68, 68, 0.14);
+      border-color: rgba(239, 68, 68, 0.6);
+    }
+    .stage-result-title {
+      font-size: 1.12rem;
+      font-weight: 900;
+      color: #86efac;
+      margin-bottom: 6px;
+    }
+    .stage-result-box.defeat-box .stage-result-title {
+      color: #fca5a5;
+    }
+    .stage-result-desc {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+    .next-stage-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #052e16;
+      font-size: 1.06rem;
+      font-weight: 900;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+      transition: opacity 0.15s;
+    }
+    .stage-result-box.defeat-box .next-stage-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    }
+    .next-stage-btn:hover { opacity: 0.93; }
+
+    /* ================= 300개 전체 도감 / 복습장 모달 ================= */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(11, 17, 32, 0.88);
+      z-index: 9000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-panel {
+      background: var(--panel-bg);
+      border: 1px solid #475569;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      max-height: 86vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(0,0,0,0.7);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-header h3 {
+      font-size: 1.12rem;
+      color: var(--primary);
+    }
+    .modal-close-btn {
+      background: #334155;
+      color: #f8fafc;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover {
+      background: #475569;
+    }
+    .modal-controls {
+      padding: 12px 20px;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .modal-filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    .filter-tab-btn {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-tab-btn.active {
+      background: #334155;
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .modal-controls input {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+    }
+    .modal-list {
+      padding: 14px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dict-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .dict-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 1rem;
+      gap: 12px;
+    }
+    .dict-en { color: var(--primary); }
+    .dict-ko { color: var(--gold); }
+    .dict-sentence {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 토스트 알림 -->
+  <div id="toastMsg" class="toast-msg">알림 메시지</div>
+
+  <!-- 상단 헤더 -->
+  <header class="header">
+    <h2>⚔️ 영단어 & 회화 몬스터 던전 배틀 RPG</h2>
+    <div class="badge-row">
+      <span class="badge">기초 어휘 300 + 실전 회화 300</span>
+      <span class="badge badge-sub">스킬 선택 타격 액션 RPG</span>
+    </div>
+  </header>
+
+  <!-- 메인 앱 영역 -->
+  <div class="app-container">
+    <!-- 1. 용사 입장 화면 -->
+    <div class="login-box" id="loginBox">
+      <div class="hero-emblem">🛡️⚔️🐉</div>
+      <h3>던전에 입장할 용사의 이름을 입력하세요</h3>
+      <div class="login-guide">
+        ⚔️ <b>몬스터 던전 배틀 규칙</b><br>
+        • <b>스킬 공격(정답 +10점):</b> 몬스터의 영단어 또는 영어 질문을 보고 3개의 스킬 중 알맞은 답을 골라 몬스터의 HP를 깎으세요!<br>
+        • <b>연속 콤보 & 보스전:</b> 연속 정답 시 콤보 보너스가 쌓이며, 5스테이지마다 강력한 <b>보스 몬스터</b>가 등장합니다.<br>
+        • <b>주의사항:</b> 오답 시 몬스터의 반격으로 용사 HP와 점수(-5점)가 감소하며, 회화 보기 힌트 사용 시 -2점이 차감됩니다.
+      </div>
+      <input type="text" id="learnerNameInput" placeholder="예: 용사 민수 (미입력 시 '용사')" maxlength="14">
+      <button type="button" class="action-btn" id="btnStartGame">⚔️ 던전 모험 시작하기</button>
+    </div>
+
+    <!-- 2. 던전 배틀 게임 화면 -->
+    <main class="game-content" id="gamePlayArea" style="display: none;">
+      
+      <!-- 상단 플레이어 상태바 -->
+      <section class="learner-profile-card" aria-label="용사 전투 현황">
+        <div class="stat-box">
+          <span class="stat-label">용사 이름</span>
+          <span class="stat-value name-val" id="profileName">용사</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">획득 점수</span>
+          <span class="stat-value score-val" id="profileScore">0점</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">처치 몬스터</span>
+          <span class="stat-value" id="profileKills">0마리</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">명중률</span>
+          <span class="stat-value" id="profileAccuracy">100%</span>
+        </div>
+      </section>
+
+      <!-- 3가지 던전 모드 전환 탭 -->
+      <div class="mode-selector-bar">
+        <button type="button" class="mode-btn active" id="modeHybrid">🔄 단어+회화 혼합 던전</button>
+        <button type="button" class="mode-btn" id="modeVocab">🔤 기초 단어 던전 (300)</button>
+        <button type="button" class="mode-btn" id="modeConv">💬 기초 회화 던전 (300)</button>
+      </div>
+
+      <!-- 현재 스테이지 안내 & 도감 버튼 -->
+      <div id="stageBanner" class="stage-banner vocab-stage">
+        <span id="stageBannerText">📘 Stage 1 · [기초 어휘 던전] 알맞은 한글 뜻을 골라 몬스터를 공격하세요!</span>
+        <button type="button" class="study-book-btn" id="btnOpenStudyBook">📖 300선 몬스터 도감 / 복습장</button>
+      </div>
+
+      <!-- 시각적 배틀 아레나 -->
+      <section class="battle-arena" id="battleArena">
+        <div class="arena-bg-stars"></div>
+
+        <div class="arena-top-hud">
+          <span class="stage-pill" id="arenaStageBadge">FLOOR 1 · 일반 몬스터</span>
+          <span class="combo-badge" id="comboBadge">🔥 0 COMBO</span>
+        </div>
+
+        <div class="combatants-row">
+          <!-- 좌측: 플레이어 용사 -->
+          <div class="combatant-box">
+            <div class="hp-panel">
+              <div class="hp-header">
+                <span style="color:#38bdf8;" id="heroHudName">용사</span>
+                <span id="heroHpText" style="color:#34d399;">100 / 100</span>
+              </div>
+              <div class="hp-track">
+                <div class="hp-bar hero-hp-bar" id="heroHpBar" style="width: 100%;"></div>
+              </div>
+            </div>
+            <div class="sprite-stage" id="heroSpriteWrap">
+              <div class="floating-dmg" id="heroDmgPopup" style="color:#f87171;">-20 HP</div>
+              <!-- 용사 SVG 일러스트 -->
+              <svg class="hero-svg" id="heroSvg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 망토 -->
+                <path d="M28 46 L16 84 L52 78 Z" fill="#dc2626"/>
+                <!-- 몸통 갑옷 -->
+                <rect x="32" y="46" width="32" height="30" rx="8" fill="#3b82f6" stroke="#93c5fd" stroke-width="2.5"/>
+                <path d="M40 46 L48 60 L56 46" fill="#fbbf24"/>
+                <!-- 머리 & 투구 -->
+                <circle cx="48" cy="30" r="16" fill="#fde68a"/>
+                <path d="M31 28 C31 15, 65 15, 65 28 L61 23 L48 26 L35 23 Z" fill="#1d4ed8"/>
+                <polygon points="48,8 44,18 52,18" fill="#fbbf24"/>
+                <!-- 눈 -->
+                <circle cx="53" cy="31" r="2.5" fill="#0f172a"/>
+                <!-- 방패 -->
+                <path d="M22 50 L36 50 L36 66 C36 73 29 77 29 77 C29 77 22 73 22 66 Z" fill="#f59e0b" stroke="#fef3c7" stroke-width="2"/>
+                <!-- 빛나는 검 -->
+                <rect x="66" y="20" width="6" height="36" rx="2" transform="rotate(18 66 20)" fill="#e0f2fe" stroke="#38bdf8" stroke-width="2"/>
+                <rect x="57" y="48" width="16" height="5" rx="2" transform="rotate(18 57 48)" fill="#fbbf24"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 중앙 타격 이펙트 -->
+          <div class="vs-fx-zone">
+            <div class="slash-fx" id="slashFx">💥</div>
+          </div>
+
+          <!-- 우측: 몬스터 -->
+          <div class="combatant-box">
+            <div class="hp-panel">
+              <div class="hp-header">
+                <span id="monsterNameText" style="color:#fca5a5;">초원 슬라임</span>
+                <span id="monsterHpText" style="color:#fbbf24;">5 / 5</span>
+              </div>
+              <div class="hp-track">
+                <div class="hp-bar monster-hp-bar" id="monsterHpBar" style="width: 100%;"></div>
+              </div>
+            </div>
+            <div class="sprite-stage" id="monsterSpriteWrap">
+              <div class="floating-dmg" id="monsterDmgPopup" style="color:#fbbf24;">-1 HIT!</div>
+              <div id="monsterSvgContainer"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 몬스터 문제 제시 스크롤 -->
+      <section class="quest-scroll-box" id="questScrollBox">
+        <div class="quest-type-label">
+          <span id="questTypeLabel">👾 몬스터의 영단어 주문 (1 / 5)</span>
+          <span id="deckRemainingText" style="color:#94a3b8; font-weight:600;">남은 덱: 300개</span>
+        </div>
+        <div class="quest-main-text" id="questMainText" title="클릭하면 영어 발음을 들을 수 있습니다">apple</div>
+        <div class="quest-hint-row" id="questHintRow" style="display: none;">
+          <button type="button" class="btn-toggle-meaning" id="btnToggleQuizMeaning">🔍 질문 뜻 보기</button>
+          <span class="quiz-meaning-text" id="quizMeaningText"></span>
+        </div>
+      </section>
+
+      <!-- 3지선다 스킬 공격 버튼 리스트 -->
+      <section class="skill-options-list" id="skillOptionsList"></section>
+
+      <!-- 스테이지 클리어 / 패배 배너 -->
+      <div class="stage-result-box" id="stageResultBox">
+        <div class="stage-result-title" id="stageResultTitle">🎉 몬스터 토벌 성공!</div>
+        <div class="stage-result-desc" id="stageResultDesc">다음 층의 더 강력한 몬스터가 나타났습니다!</div>
+        <button type="button" id="nextStageBtn" class="next-stage-btn">⚔️ 다음 스테이지 돌진하기 →</button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 300개 전체 도감 / 복습장 모달 -->
+  <div class="modal-backdrop" id="studyBookModal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3>📖 기초 필수 어휘 & 회화 300선 몬스터 도감</h3>
+        <button type="button" class="modal-close-btn" id="btnCloseStudyBook">닫기 ✕</button>
+      </div>
+      <div class="modal-controls">
+        <div class="modal-filter-tabs">
+          <button type="button" class="filter-tab-btn active" data-filter="all">전체 (단어 + 회화)</button>
+          <button type="button" class="filter-tab-btn" data-filter="vocab">기초 단어만</button>
+          <button type="button" class="filter-tab-btn" data-filter="conv">기초 회화만</button>
+        </div>
+        <input type="text" id="studySearchInput" placeholder="영어 단어, 한글 뜻, 또는 회화 문장 검색...">
+      </div>
+      <div class="modal-list" id="studyBookList"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // =========================================================================
+      // 1. 기초 필수 영단어 300개 + 실전 회화 300문장 (질문-답변 1:1 정밀 매칭)
+      // =========================================================================
+      const RAW_CURRICULUM_DATA = [
+        // [001 ~ 050] 핵심 동사 & 일상 활동
+        { en: "go", ko: "가다", qEn: "Where are you going right now?", qKo: "지금 어디에 가고 있니?", sentEn: "I want to go home early today.", sentKo: "나는 오늘 집에 일찍 가고 싶다." },
+        { en: "come", ko: "오다", qEn: "Can you come to my birthday party?", qKo: "내 생일 파티에 올 수 있니?", sentEn: "Sure, I can come to your party.", sentKo: "물론이지, 네 파티에 갈 수 있어." },
+        { en: "eat", ko: "먹다", qEn: "What do you want to eat for lunch?", qKo: "점심으로 무엇을 먹고 싶니?", sentEn: "Let's eat pizza for lunch.", sentKo: "점심으로 피자를 먹자." },
+        { en: "drink", ko: "마시다", qEn: "Would you like something to drink?", qKo: "마실 것 좀 드릴까요?", sentEn: "I drink a cup of water every morning.", sentKo: "나는 매일 아침 물 한 잔을 마신다." },
+        { en: "sleep", ko: "자다", qEn: "How many hours do you usually sleep?", qKo: "보통 몇 시간이나 자니?", sentEn: "I need to sleep eight hours a day.", sentKo: "나는 하루에 8시간은 자야 한다." },
+        { en: "read", ko: "읽다", qEn: "What do you do in your free time?", qKo: "여가 시간에 무엇을 하니?", sentEn: "I like to read books before bed.", sentKo: "나는 자기 전에 책 읽는 것을 좋아한다." },
+        { en: "write", ko: "쓰다", qEn: "How should I reply to this email?", qKo: "이 이메일에 어떻게 답장해야 할까?", sentEn: "Please write your name here.", sentKo: "여기에 당신의 이름을 써 주세요." },
+        { en: "speak", ko: "말하다", qEn: "Do you speak any foreign languages?", qKo: "외국어를 할 줄 아시나요?", sentEn: "Can you speak a little slower?", sentKo: "조금만 더 천천히 말해 주실 수 있나요?" },
+        { en: "listen", ko: "듣다", qEn: "Are you listening to me right now?", qKo: "지금 내 말 듣고 있니?", sentEn: "Please listen to the teacher carefully.", sentKo: "선생님 말씀을 주의 깊게 들어 주세요." },
+        { en: "run", ko: "달리다", qEn: "Why are you running so fast?", qKo: "왜 그렇게 빨리 달리고 있니?", sentEn: "I run in the park every evening.", sentKo: "나는 매일 저녁 공원에서 달린다." },
+        { en: "walk", ko: "걷다", qEn: "How do you get to school?", qKo: "학교에 어떻게 가니?", sentEn: "I usually walk to school with my friend.", sentKo: "나는 보통 친구와 함께 걸어서 학교에 간다." },
+        { en: "play", ko: "놀다 / 연주하다", qEn: "What do you want to do after school?", qKo: "방과 후에 무엇을 하고 싶니?", sentEn: "Let's play soccer after school.", sentKo: "방과 후에 축구를 하자." },
+        { en: "see", ko: "보다", qEn: "Did you see my phone on the table?", qKo: "탁자 위에서 내 전화기 봤니?", sentEn: "I was so happy to see you again.", sentKo: "너를 다시 보게 되어 정말 기뻤어." },
+        { en: "look", ko: "바라보다", qEn: "Look outside! How is the weather?", qKo: "밖을 봐! 날씨가 어떠니?", sentEn: "Look at the blue sky today!", sentKo: "오늘 저 파란 하늘을 좀 봐!" },
+        { en: "watch", ko: "지켜보다 / 시청하다", qEn: "What are you doing tonight?", qKo: "오늘 밤에 뭐 할 거야?", sentEn: "We watch a movie every Friday night.", sentKo: "우리는 매주 금요일 밤마다 영화를 본다." },
+        { en: "help", ko: "돕다", qEn: "This box is too heavy for me.", qKo: "이 상자는 나한테 너무 무거워.", sentEn: "Can I help you carry that heavy box?", sentKo: "저 무거운 상자 나르는 것을 도와드릴까요?" },
+        { en: "love", ko: "사랑하다", qEn: "Do you like your new puppy?", qKo: "새 강아지가 마음에 드니?", sentEn: "I love my family very much.", sentKo: "나는 우리 가족을 매우 사랑한다." },
+        { en: "like", ko: "좋아하다", qEn: "What kind of food do you like?", qKo: "어떤 종류의 음식을 좋아하니?", sentEn: "I really like sweet strawberries.", sentKo: "나는 달콤한 딸기를 정말 좋아한다." },
+        { en: "study", ko: "공부하다", qEn: "Where are you going with those books?", qKo: "그 책들을 들고 어디에 가니?", sentEn: "I study English at the library.", sentKo: "나는 도서관에서 영어를 공부한다." },
+        { en: "clean", ko: "청소하다 / 깨끗한", qEn: "Your room looks very messy today.", qKo: "오늘 네 방이 아주 지저분해 보이네.", sentEn: "I have to clean my room this weekend.", sentKo: "나는 이번 주말에 내 방을 청소해야 한다." },
+        { en: "wash", ko: "씻다", qEn: "Dinner is ready! Come to the table.", qKo: "저녁 준비됐어! 식탁으로 와.", sentEn: "Don't forget to wash your hands first.", sentKo: "먼저 손 씻는 것을 잊지 마." },
+        { en: "open", ko: "열다", qEn: "It's so hot and stuffy in here.", qKo: "여기는 너무 덥고 답답하네.", sentEn: "Could you open the window, please?", sentKo: "창문 좀 열어 주시겠어요?" },
+        { en: "close", ko: "닫다", qEn: "Why are you closing the door?", qKo: "왜 문을 닫고 있니?", sentEn: "Please close the door quietly.", sentKo: "문을 조용히 닫아 주세요." },
+        { en: "stop", ko: "멈추다", qEn: "Look at the red traffic light!", qKo: "빨간 신호등을 봐!", sentEn: "Please stop talking for a second.", sentKo: "잠시만 말하는 것을 멈춰 주세요." },
+        { en: "smile", ko: "미소 짓다", qEn: "You look very happy today!", qKo: "오늘 아주 행복해 보이네!", sentEn: "She always smiles brightly at everyone.", sentKo: "그녀는 항상 모든 사람에게 밝게 미소 짓는다." },
+        { en: "sing", ko: "노래하다", qEn: "Who is singing on the stage?", qKo: "무대 위에서 누가 노래하고 있니?", sentEn: "He can sing English songs very well.", sentKo: "그는 영어 노래를 아주 잘 부를 수 있다." },
+        { en: "dance", ko: "춤추다", qEn: "Do you want to join us on the floor?", qKo: "무대에 같이 나와서 놀래?", sentEn: "We love to dance to exciting music.", sentKo: "우리는 신나는 음악에 맞춰 춤추는 것을 좋아한다." },
+        { en: "buy", ko: "사다", qEn: "Why are you going to the store?", qKo: "가게에 왜 가고 있니?", sentEn: "I want to buy a new pair of shoes.", sentKo: "나는 새 신발 한 켤레를 사고 싶다." },
+        { en: "sell", ko: "팔다", qEn: "Does this bakery have fresh bread?", qKo: "이 빵집에 갓 구운 빵이 있나요?", sentEn: "They sell fresh bread every morning.", sentKo: "그들은 매일 아침 신선한 빵을 판다." },
+        { en: "pay", ko: "지불하다", qEn: "How would you like to pay today?", qKo: "오늘 결제는 어떻게 하시겠어요?", sentEn: "Can I pay by credit card here?", sentKo: "여기서 신용카드로 결제할 수 있나요?" },
+        { en: "make", ko: "만들다", qEn: "What are you cooking in the kitchen?", qKo: "부엌에서 무엇을 요리하고 있니?", sentEn: "Let's make delicious pancakes together.", sentKo: "함께 맛있는 팬케이크를 만들자." },
+        { en: "take", ko: "가져가다 / 타다", qEn: "How long does it take to get there?", qKo: "거기까지 가는 데 얼마나 걸리나요?", sentEn: "It takes ten minutes by subway.", sentKo: "지하철로 10분 걸립니다." },
+        { en: "give", ko: "주다", qEn: "Can you help me with this math problem?", qKo: "이 수학 문제 좀 도와줄 수 있니?", sentEn: "Please give me a small hint.", sentKo: "작은 힌트 하나만 주세요." },
+        { en: "get", ko: "얻다 / 받다", qEn: "What can I get for you today?", qKo: "오늘 무엇을 드릴까요?", sentEn: "Can I get a cup of iced coffee?", sentKo: "아이스 커피 한 잔 주실 수 있나요?" },
+        { en: "find", ko: "찾다", qEn: "What are you looking for under the bed?", qKo: "침대 밑에서 무엇을 찾고 있니?", sentEn: "I cannot find my house keys anywhere.", sentKo: "어디에서도 집 열쇠를 찾을 수가 없다." },
+        { en: "know", ko: "알다", qEn: "Do you know where the station is?", qKo: "역이 어디에 있는지 아시나요?", sentEn: "Sorry, I don't know the way well.", sentKo: "죄송하지만 길을 잘 모르겠어요." },
+        { en: "think", ko: "생각하다", qEn: "What do you think about this idea?", qKo: "이 아이디어에 대해 어떻게 생각하니?", sentEn: "I think that is a really great idea.", sentKo: "그것은 정말 좋은 생각이라고 생각해." },
+        { en: "want", ko: "원하다", qEn: "What do you want to do this Sunday?", qKo: "이번 일요일에 무엇을 하고 싶니?", sentEn: "I want to rest at home all day.", sentKo: "나는 하루 종일 집에서 쉬고 싶다." },
+        { en: "need", ko: "필요로 하다", qEn: "Do you need anything else from the market?", qKo: "시장에서 더 필요한 것 있니?", sentEn: "I need some fresh milk and eggs.", sentKo: "신선한 우유와 달걀이 좀 필요해." },
+        { en: "try", ko: "시도하다 / 입어보다", qEn: "How does this jacket fit you?", qKo: "이 재킷이 잘 맞나요?", sentEn: "Can I try this jacket on first?", sentKo: "이 재킷을 먼저 입어 봐도 될까요?" },
+        { en: "use", ko: "사용하다", qEn: "My phone battery is completely dead.", qKo: "내 휴대폰 배터리가 완전히 나갔어.", sentEn: "May I use your phone for a minute?", sentKo: "잠시만 당신의 전화기를 써도 될까요?" },
+        { en: "work", ko: "일하다 / 작동하다", qEn: "Where does your older brother work?", qKo: "네 형은 어디에서 일하니?", sentEn: "He works at a hospital downtown.", sentKo: "그는 시내에 있는 병원에서 일한다." },
+        { en: "rest", ko: "휴식하다", qEn: "You look really tired today.", qKo: "오늘 정말 피곤해 보이네.", sentEn: "You should take a short rest now.", sentKo: "지금 잠깐 휴식을 취하는 게 좋겠어." },
+        { en: "start", ko: "시작하다", qEn: "What time does the movie start?", qKo: "영화가 몇 시에 시작하나요?", sentEn: "The movie starts at seven o'clock.", sentKo: "영화는 7시에 시작합니다." },
+        { en: "finish", ko: "끝내다", qEn: "Have you finished your homework yet?", qKo: "숙제는 벌써 다 끝냈니?", sentEn: "I just finished all my homework.", sentKo: "방금 숙제를 전부 다 끝냈어." },
+        { en: "wait", ko: "기다리다", qEn: "Where should I meet you?", qKo: "어디서 너를 만나면 될까?", sentEn: "Please wait for me in front of the gate.", sentKo: "정문 앞에서 나를 기다려 줘." },
+        { en: "meet", ko: "만나다", qEn: "When can we meet next week?", qKo: "다음 주에 언제 만날 수 있을까?", sentEn: "Let's meet at the cafe on Tuesday.", sentKo: "화요일에 카페에서 만나자." },
+        { en: "call", ko: "전화하다 / 부르다", qEn: "How can I reach you later?", qKo: "나중에 어떻게 연락하면 될까?", sentEn: "I will call you as soon as I arrive.", sentKo: "도착하자마자 너에게 전화할게." },
+        { en: "ask", ko: "묻다 / 요청하다", qEn: "Do you have any questions about the lesson?", qKo: "수업에 대해 질문이 있나요?", sentEn: "May I ask you a quick question?", sentKo: "짧은 질문 하나 여쭤봐도 될까요?" },
+        { en: "answer", ko: "대답하다 / 대답", qEn: "Why didn't you pick up the phone?", qKo: "왜 전화를 받지 않았니?", sentEn: "Sorry, I couldn't answer the phone then.", sentKo: "미안해, 그때는 전화를 받을 수가 없었어." },
+
+        // [051 ~ 100] 학교 & 교실 & 학용품
+        { en: "school", ko: "학교", qEn: "Do you like your new school?", qKo: "새 학교가 마음에 드니?", sentEn: "Yes, my new school is big and clean.", sentKo: "응, 내 새 학교는 크고 깨끗해." },
+        { en: "teacher", ko: "선생님", qEn: "Who is your favorite teacher?", qKo: "가장 좋아하는 선생님은 누구니?", sentEn: "My English teacher is very kind.", sentKo: "우리 영어 선생님은 매우 친절하시다." },
+        { en: "student", ko: "학생", qEn: "Are you a university student?", qKo: "당신은 대학생인가요?", sentEn: "No, I am a high school student.", sentKo: "아니요, 저는 고등학생입니다." },
+        { en: "friend", ko: "친구", qEn: "Who are you having lunch with?", qKo: "누구와 점심을 먹고 있니?", sentEn: "I am eating with my best friend.", sentKo: "나는 가장 친한 친구와 밥을 먹고 있어." },
+        { en: "classroom", ko: "교실", qEn: "Where is our next class?", qKo: "우리 다음 수업은 어디서 하니?", sentEn: "Our next class is in Room 302.", sentKo: "우리 다음 수업은 302호 교실에서 해." },
+        { en: "desk", ko: "책상", qEn: "Where did you put my notebook?", qKo: "내 공책을 어디에 두었니?", sentEn: "I put it right on your desk.", sentKo: "네 책상 바로 위에 올려두었어." },
+        { en: "chair", ko: "의자", qEn: "Is anyone sitting in this chair?", qKo: "이 의자에 누구 앉아 있나요?", sentEn: "No, that chair is completely empty.", sentKo: "아니요, 그 의자는 완전히 비어 있습니다." },
+        { en: "pencil", ko: "연필", qEn: "Do you have an extra pencil?", qKo: "여분의 연필이 있니?", sentEn: "Here you go, you can borrow this pencil.", sentKo: "여기 있어, 이 연필을 빌려 써도 돼." },
+        { en: "eraser", ko: "지우개", qEn: "I made a mistake on my paper.", qKo: "시험지에 실수를 했어.", sentEn: "Use my eraser to fix your answer.", sentKo: "내 지우개를 써서 답을 고쳐 봐." },
+        { en: "book", ko: "책", qEn: "What is that thick book about?", qKo: "저 두꺼운 책은 무엇에 관한 거니?", sentEn: "This book is about world history.", sentKo: "이 책은 세계 역사에 관한 것이야." },
+        { en: "notebook", ko: "공책", qEn: "Why are you writing in that notebook?", qKo: "왜 그 공책에 글을 쓰고 있니?", sentEn: "I write new English words in my notebook.", sentKo: "나는 공책에 새로운 영어 단어들을 적어." },
+        { en: "ruler", ko: "자", qEn: "How can I draw a straight line?", qKo: "어떻게 하면 직선을 그릴 수 있을까?", sentEn: "Use a plastic ruler to draw straight lines.", sentKo: "직선을 그리려면 플라스틱 자를 사용해." },
+        { en: "scissors", ko: "가위", qEn: "How do I open this snack bag?", qKo: "이 과자 봉지를 어떻게 열지?", sentEn: "Be careful when you use sharp scissors.", sentKo: "날카로운 가위를 사용할 때는 조심해." },
+        { en: "blackboard", ko: "칠판", qEn: "Can you see the words from the back?", qKo: "뒤에서도 글씨가 잘 보이니?", sentEn: "Yes, the writing on the blackboard is clear.", sentKo: "응, 칠판에 적힌 글씨가 선명하게 보여." },
+        { en: "homework", ko: "숙제", qEn: "Was the math homework difficult?", qKo: "수학 숙제가 어려웠니?", sentEn: "It was a little hard, so I asked for help.", sentKo: "조금 어려워서 도움을 요청했어." },
+        { en: "question", ko: "질문", qEn: "Does everything make sense so far?", qKo: "지금까지 설명한 내용이 다 이해되니?", sentEn: "I have one question about this grammar.", sentKo: "이 문법에 대해 질문이 하나 있어요." },
+        { en: "lesson", ko: "수업 / 교훈", qEn: "How was your piano lesson today?", qKo: "오늘 피아노 수업은 어땠니?", sentEn: "Today's piano lesson was super fun.", sentKo: "오늘 피아노 수업은 정말 재미있었어." },
+        { en: "library", ko: "도서관", qEn: "Is the library open on Sundays?", qKo: "도서관은 일요일에도 문을 여나요?", sentEn: "Yes, it is open until six in the evening.", sentKo: "네, 저녁 6시까지 문을 엽니다." },
+        { en: "computer", ko: "컴퓨터", qEn: "Why aren't you using your laptop?", qKo: "왜 노트북을 사용하지 않고 있니?", sentEn: "My computer is updating right now.", sentKo: "지금 내 컴퓨터가 업데이트 중이야." },
+        { en: "test", ko: "시험", qEn: "When is your final English test?", qKo: "기말 영어 시험이 언제니?", sentEn: "Our final test is next Wednesday.", sentKo: "우리 기말시험은 다음 주 수요일이야." },
+
+        // [101 ~ 150] 음식 & 카페 & 식당
+        { en: "water", ko: "물", qEn: "Would you like cold or warm water?", qKo: "찬물과 따뜻한 물 중 어느 것으로 드릴까요?", sentEn: "Cold water with ice, please.", sentKo: "얼음을 넣은 찬물로 주세요." },
+        { en: "milk", ko: "우유", qEn: "Do you take milk in your coffee?", qKo: "커피에 우유를 넣어 드시나요?", sentEn: "No thanks, I prefer black coffee.", sentKo: "아니요 괜찮습니다, 저는 블랙커피를 더 좋아해요." },
+        { en: "bread", ko: "빵", qEn: "What do you usually eat for breakfast?", qKo: "아침 식사로 보통 무엇을 먹니?", sentEn: "I usually eat toasted bread and jam.", sentKo: "나는 보통 구운 빵과 잼을 먹어." },
+        { en: "rice", ko: "밥 / 쌀", qEn: "Would you like another bowl of rice?", qKo: "밥 한 공기 더 드릴까요?", sentEn: "Yes please, this curry is delicious.", sentKo: "네 주세요, 이 카레가 정말 맛있네요." },
+        { en: "apple", ko: "사과", qEn: "Do you want a snack right now?", qKo: "지금 간식 좀 먹을래?", sentEn: "I would love a sweet red apple.", sentKo: "달콤한 빨간 사과 하나 먹으면 좋겠어." },
+        { en: "banana", ko: "바나나", qEn: "What fruit do you put in your smoothie?", qKo: "스무디에 어떤 과일을 넣니?", sentEn: "I always put a ripe banana in it.", sentKo: "나는 항상 잘 익은 바나나를 넣어." },
+        { en: "orange", ko: "오렌지", qEn: "Is this juice freshly squeezed?", qKo: "이 주스는 갓 짜낸 건가요?", sentEn: "Yes, it is made from fresh oranges.", sentKo: "네, 신선한 오렌지로 만든 것입니다." },
+        { en: "strawberry", ko: "딸기", qEn: "What flavor of cake do you want?", qKo: "무슨 맛 케이크를 원하니?", sentEn: "Let's get the fresh strawberry cake.", sentKo: "신선한 딸기 케이크로 사자." },
+        { en: "grape", ko: "포도", qEn: "Are these green grapes sweet?", qKo: "이 청포도는 달콤한가요?", sentEn: "Yes, they are seedless and very sweet.", sentKo: "네, 씨가 없고 아주 달콤합니다." },
+        { en: "meat", ko: "고기", qEn: "Do you eat meat or are you vegetarian?", qKo: "고기를 드시나요, 아니면 채식주의자인가요?", sentEn: "I eat both meat and vegetables.", sentKo: "저는 고기와 채소를 둘 다 먹습니다." },
+        { en: "fish", ko: "생선 / 물고기", qEn: "What is the special menu tonight?", qKo: "오늘 밤 특선 메뉴는 무엇인가요?", sentEn: "Tonight's special is grilled fish.", sentKo: "오늘 밤 특선 메뉴는 생선구이입니다." },
+        { en: "egg", ko: "달걀", qEn: "How would you like your eggs cooked?", qKo: "달걀 요리는 어떻게 해 드릴까요?", sentEn: "Scrambled eggs, please.", sentKo: "스크램블 에그로 해 주세요." },
+        { en: "cheese", ko: "치즈", qEn: "Would you like extra cheese on your burger?", qKo: "버거에 치즈를 추가하시겠어요?", sentEn: "Yes, please add extra cheddar cheese.", sentKo: "네, 체다 치즈를 추가해 주세요." },
+        { en: "cake", ko: "케이크", qEn: "Did you buy a cake for Mom's birthday?", qKo: "엄마 생신 케이크 샀니?", sentEn: "Yes, it is inside the refrigerator.", sentKo: "응, 냉장고 안에 넣어 두었어." },
+        { en: "cookie", ko: "과자 / 쿠키", qEn: "Did you bake these chocolate cookies?", qKo: "이 초콜릿 쿠키들을 직접 구웠니?", sentEn: "Yes, try one while it is still warm.", sentKo: "응, 아직 따뜻할 때 하나 먹어 봐." },
+        { en: "juice", ko: "주스", qEn: "What kind of juice do you have?", qKo: "어떤 종류의 주스가 있나요?", sentEn: "We have apple, orange, and grape juice.", sentKo: "사과, 오렌지, 포도 주스가 있습니다." },
+        { en: "spoon", ko: "숟가락", qEn: "Do you need anything else for your soup?", qKo: "수프 드실 때 더 필요한 게 있나요?", sentEn: "Could you bring me a clean spoon?", sentKo: "깨끗한 숟가락 하나 가져다주시겠어요?" },
+        { en: "fork", ko: "포크", qEn: "Can you use chopsticks well?", qKo: "젓가락질을 잘할 수 있니?", sentEn: "Not really, so I usually use a fork.", sentKo: "잘 못해서 보통 포크를 사용해." },
+        { en: "cup", ko: "컵", qEn: "Where are the clean coffee cups?", qKo: "깨끗한 커피잔이 어디에 있니?", sentEn: "They are on the top shelf in the kitchen.", sentKo: "부엌 맨 위 선반에 있어." },
+        { en: "dish", ko: "접시 / 요리", qEn: "What is your favorite Korean dish?", qKo: "가장 좋아하는 한국 요리는 무엇인가요?", sentEn: "My favorite Korean dish is bibimbap.", sentKo: "제가 가장 좋아하는 한국 요리는 비빔밥입니다." },
+        { en: "menu", ko: "메뉴판", qEn: "Are you ready to order yet?", qKo: "주문하실 준비가 되셨나요?", sentEn: "Could we look at the menu for one more minute?", sentKo: "1분만 더 메뉴판을 봐도 될까요?" },
+        { en: "bill", ko: "계산서", qEn: "Excuse me, how can I help you?", qKo: "실례합니다, 무엇을 도와드릴까요?", sentEn: "Could we have the bill, please?", sentKo: "계산서 좀 가져다주시겠어요?" },
+        { en: "delicious", ko: "맛있는", qEn: "How does your pasta taste?", qKo: "파스타 맛이 어떠니?", sentEn: "It is super delicious! You should try it.", sentKo: "정말 맛있어! 너도 꼭 먹어 봐." },
+        { en: "hungry", ko: "배고픈", qEn: "Do you want to eat dinner now?", qKo: "지금 저녁 먹을래?", sentEn: "Yes! I am so hungry right now.", sentKo: "응! 나 지금 너무 배고파." },
+        { en: "thirsty", ko: "목마른", qEn: "Why are you drinking water so fast?", qKo: "왜 그렇게 물을 빨리 마시니?", sentEn: "I was really thirsty after running.", sentKo: "달리기를 하고 나서 정말 목이 말랐거든." },
+
+        // [151 ~ 200] 가족 & 사람 & 직업 & 신체
+        { en: "family", ko: "가족", qEn: "How many people are in your family?", qKo: "가족이 모두 몇 명인가요?", sentEn: "There are four people in my family.", sentKo: "우리 가족은 모두 네 명입니다." },
+        { en: "father", ko: "아버지", qEn: "What does your father do?", qKo: "아버지께서는 무슨 일을 하시니?", sentEn: "My father is a high school teacher.", sentKo: "우리 아버지는 고등학교 선생님이셔." },
+        { en: "mother", ko: "어머니", qEn: "Who taught you how to cook?", qKo: "누가 너에게 요리하는 법을 가르쳐 주었니?", sentEn: "My mother taught me how to make soup.", sentKo: "어머니께서 수프 만드는 법을 가르쳐 주셨어." },
+        { en: "brother", ko: "형 / 오빠 / 남동생", qEn: "Do you have any brothers or sisters?", qKo: "형제나 자매가 있니?", sentEn: "I have one younger brother.", sentKo: "나는 남동생이 한 명 있어." },
+        { en: "sister", ko: "언니 / 누나 / 여동생", qEn: "Is that tall girl your older sister?", qKo: "저 키 큰 소녀가 네 언니니?", sentEn: "Yes, she is three years older than me.", sentKo: "응, 나보다 세 살 많아." },
+        { en: "baby", ko: "아기", qEn: "Shh! Why do we have to be quiet?", qKo: "쉿! 왜 조용히 해야 하니?", sentEn: "The baby is sleeping in the bedroom.", sentKo: "아기가 침실에서 자고 있거든." },
+        { en: "doctor", ko: "의사", qEn: "You have a high fever today.", qKo: "오늘 열이 많이 나네.", sentEn: "You should go see a doctor right away.", sentKo: "당장 병원에 가서 의사를 만나봐야 해." },
+        { en: "nurse", ko: "간호사", qEn: "Who took your temperature at the clinic?", qKo: "병원에서 누가 체온을 재 주었니?", sentEn: "A friendly nurse checked my temperature.", sentKo: "친절한 간호사분이 체온을 확인해 주셨어." },
+        { en: "police", ko: "경찰", qEn: "I lost my wallet on the subway.", qKo: "지하철에서 지갑을 잃어버렸어.", sentEn: "Let's report it to the police station.", sentKo: "경찰서에 분실 신고를 하러 가자." },
+        { en: "cook", ko: "요리사 / 요리하다", qEn: "Who made all this wonderful food?", qKo: "이 멋진 음식들을 누가 다 만들었니?", sentEn: "My uncle is a professional cook.", sentKo: "우리 삼촌은 전문 요리사야." },
+        { en: "singer", ko: "가수", qEn: "What is your dream job?", qKo: "장래 희망이 무엇이니?", sentEn: "I want to become a famous singer.", sentKo: "나는 유명한 가수가 되고 싶어." },
+        { en: "people", ko: "사람들", qEn: "Was the concert crowded yesterday?", qKo: "어제 콘서트에 사람이 많았니?", sentEn: "Yes, there were thousands of people there.", sentKo: "응, 거기에 수천 명의 사람들이 있었어." },
+        { en: "child", ko: "어린이 / 아이", qEn: "Is this movie suitable for everyone?", qKo: "이 영화는 모든 연령이 봐도 되나요?", sentEn: "Yes, both adults and children can enjoy it.", sentKo: "네, 어른과 어린이 모두 즐길 수 있습니다." },
+        { en: "head", ko: "머리", qEn: "Why are you wearing a helmet?", qKo: "왜 헬멧을 쓰고 있니?", sentEn: "A helmet protects your head when riding a bike.", sentKo: "헬멧은 자전거를 탈 때 머리를 보호해 줘." },
+        { en: "face", ko: "얼굴", qEn: "You look very sleepy this morning.", qKo: "오늘 아침 아주 졸려 보이네.", sentEn: "Go wash your face with cold water.", sentKo: "가서 찬물로 세수 좀 하고 와." },
+        { en: "eye", ko: "눈(신체)", qEn: "Why are you rubbing your eyes?", qKo: "왜 눈을 비비고 있니?", sentEn: "My eyes feel dry from looking at the screen.", sentKo: "화면을 오래 봐서 눈이 건조해." },
+        { en: "nose", ko: "코", qEn: "Do you have a cold?", qKo: "감기에 걸렸니?", sentEn: "Yes, I have a runny nose today.", sentKo: "응, 오늘 콧물이 나네." },
+        { en: "mouth", ko: "입", qEn: "What did the dentist say to you?", qKo: "치과 의사가 뭐라고 하셨니?", sentEn: "He told me to open my mouth wide.", sentKo: "입을 크게 벌리라고 말씀하셨어." },
+        { en: "ear", ko: "귀", qEn: "Why are you wearing earmuffs?", qKo: "왜 귀마개를 하고 있니?", sentEn: "My ears get really cold in the winter wind.", sentKo: "겨울바람을 맞으면 귀가 정말 시리거든." },
+        { en: "hand", ko: "손", qEn: "If you know the answer, what should you do?", qKo: "정답을 알면 어떻게 해야 하나요?", sentEn: "Please raise your hand before speaking.", sentKo: "말하기 전에 먼저 손을 들어 주세요." },
+        { en: "foot", ko: "발", qEn: "Why are you taking off your shoes?", qKo: "왜 신발을 벗고 있니?", sentEn: "My feet hurt after walking all day.", sentKo: "하루 종일 걸었더니 발이 아파." },
+        { en: "arm", ko: "팔", qEn: "Why is your left arm in a cast?", qKo: "왜 왼팔에 깁스를 하고 있니?", sentEn: "I hurt my arm while playing basketball.", sentKo: "농구를 하다가 팔을 다쳤어." },
+        { en: "leg", ko: "다리", qEn: "Can you run in the race tomorrow?", qKo: "내일 달리기 경주에 뛸 수 있니?", sentEn: "No, my legs are still sore from yesterday.", sentKo: "아니, 어제 운동해서 다리가 아직 뻐근해." },
+        { en: "tooth", ko: "치아 / 이빨", qEn: "How often do you brush your teeth?", qKo: "이를 얼마나 자주 닦니?", sentEn: "I brush my teeth three times a day.", sentKo: "나는 하루에 세 번 이를 닦아." },
+        { en: "hair", ko: "머리카락", qEn: "Did you go to the salon yesterday?", qKo: "어제 미용실에 다녀왔니?", sentEn: "Yes, I cut my hair short for summer.", sentKo: "응, 여름을 맞이해서 머리를 짧게 잘랐어." },
+
+        // [201 ~ 250] 장소 & 교통 & 날씨 & 자연
+        { en: "house", ko: "집", qEn: "Where do you live?", qKo: "어디에 사시나요?", sentEn: "I live in a small house near the river.", sentKo: "저는 강 근처의 작은 집에 삽니다." },
+        { en: "room", ko: "방", qEn: "Do you share a bedroom with your brother?", qKo: "남동생과 방을 같이 쓰니?", sentEn: "No, I have my own room now.", sentKo: "아니, 이제 내 방이 따로 있어." },
+        { en: "door", ko: "문", qEn: "Did you lock the front door?", qKo: "현관문 잠갔니?", sentEn: "Yes, I locked the door before leaving.", sentKo: "응, 나오기 전에 문을 잠갔어." },
+        { en: "window", ko: "창문", qEn: "Can we get some fresh air in here?", qKo: "여기 신선한 공기 좀 쐴 수 있을까?", sentEn: "Sure, I will open the window wide.", sentKo: "물론이지, 창문을 활짝 열어 줄게." },
+        { en: "bed", ko: "침대", qEn: "What time do you usually go to bed?", qKo: "보통 몇 시에 잠자리에 드니?", sentEn: "I usually go to bed around eleven.", sentKo: "나는 보통 11시쯤 잠자리에 들어." },
+        { en: "clock", ko: "시계", qEn: "What time is it right now?", qKo: "지금 몇 시인가요?", sentEn: "Look at the wall clock; it is three o'clock.", sentKo: "벽시계를 봐, 지금 3시야." },
+        { en: "phone", ko: "전화기 / 휴대폰", qEn: "Where did I leave my smartphone?", qKo: "내 스마트폰을 어디에 두었지?", sentEn: "Your phone is charging on the sofa.", sentKo: "네 휴대폰은 소파 위에서 충전 중이야." },
+        { en: "bag", ko: "가방", qEn: "Is that heavy backpack yours?", qKo: "저 무거운 배낭이 네 것이니?", sentEn: "Yes, I have five textbooks in my bag.", sentKo: "응, 가방 안에 교과서가 다섯 권이나 들어 있어." },
+        { en: "money", ko: "돈", qEn: "Do you have enough cash for the bus?", qKo: "버스 탈 현금은 충분하니?", sentEn: "Yes, I have enough money in my wallet.", sentKo: "응, 지갑에 돈이 충분히 있어." },
+        { en: "car", ko: "자동차", qEn: "Did your dad drive you to school?", qKo: "아빠가 차로 학교에 데려다주셨니?", sentEn: "Yes, we came here in his new car.", sentKo: "응, 아빠의 새 차를 타고 여기 왔어." },
+        { en: "bus", ko: "버스", qEn: "Which bus goes to the city museum?", qKo: "어떤 버스가 시립 박물관으로 가나요?", sentEn: "You can take Bus number 402.", sentKo: "402번 버스를 타시면 됩니다." },
+        { en: "train", ko: "기차", qEn: "How are you traveling to Busan?", qKo: "부산까지 어떻게 여행가니?", sentEn: "We are taking the fast train tomorrow.", sentKo: "우리는 내일 고속 기차를 타고 갈 거야." },
+        { en: "bike", ko: "자전거", qEn: "Can you ride a bicycle?", qKo: "자전거를 탈 줄 아니?", sentEn: "Yes, I ride my bike every Saturday.", sentKo: "응, 매주 토요일마다 자전거를 타." },
+        { en: "subway", ko: "지하철", qEn: "Where is the nearest subway station?", qKo: "가장 가까운 지하철역이 어디인가요?", sentEn: "Walk straight two blocks and turn left.", sentKo: "두 블록 직진한 뒤 왼쪽으로 도세요." },
+        { en: "airport", ko: "공항", qEn: "When does your flight leave?", qKo: "비행기가 언제 출발하나요?", sentEn: "I need to be at the airport by nine.", sentKo: "9시까지 공항에 도착해야 해요." },
+        { en: "hospital", ko: "병원", qEn: "Where is your sister right now?", qKo: "지금 네 여동생은 어디에 있니?", sentEn: "She went to the hospital because of a cold.", sentKo: "감기 때문에 병원에 갔어." },
+        { en: "park", ko: "공원", qEn: "Where do you walk your dog?", qKo: "강아지 산책은 어디서 시키니?", sentEn: "We walk together in the central park.", sentKo: "우리는 중앙 공원에서 함께 산책해." },
+        { en: "sun", ko: "태양 / 해", qEn: "Why are you wearing sunglasses?", qKo: "왜 선글라스를 쓰고 있니?", sentEn: "The sun is very bright this afternoon.", sentKo: "오늘 오후에는 해가 아주 눈부시네." },
+        { en: "moon", ko: "달", qEn: "Look up at the night sky!", qKo: "밤하늘 위를 올려다봐!", sentEn: "The full moon looks so big and round.", sentKo: "보름달이 정말 크고 둥글게 보이네." },
+        { en: "star", ko: "별", qEn: "Can you see stars in the countryside?", qKo: "시골에서는 별이 잘 보이니?", sentEn: "Yes, the sky is full of shining stars.", sentKo: "응, 하늘에 반짝이는 별들이 가득해." },
+        { en: "sky", ko: "하늘", qEn: "Do you think it will rain soon?", qKo: "곧 비가 올 것 같니?", sentEn: "Look at the dark clouds in the sky.", sentKo: "하늘에 낀 먹구름을 봐." },
+        { en: "rain", ko: "비", qEn: "Why are you taking an umbrella?", qKo: "왜 우산을 챙기고 있니?", sentEn: "The forecast says there will be heavy rain.", sentKo: "일기예보에서 큰비가 올 거라고 했어." },
+        { en: "snow", ko: "눈(날씨)", qEn: "Does it snow a lot here in winter?", qKo: "이곳은 겨울에 눈이 많이 오나요?", sentEn: "Yes, everything turns white in January.", sentKo: "네, 1월에는 온 세상이 하얗게 변합니다." },
+        { en: "flower", ko: "꽃", qEn: "What did you buy for your mom?", qKo: "어머니께 무엇을 사드렸니?", sentEn: "I bought a bouquet of yellow flowers.", sentKo: "노란 꽃다발을 하나 사드렸어." },
+        { en: "tree", ko: "나무", qEn: "Where should we sit for our picnic?", qKo: "소풍 돗자리를 어디에 펴고 앉을까?", sentEn: "Let's sit under that big shade tree.", sentKo: "저 큰 그늘 나무 아래에 앉자." },
+
+        // [251 ~ 300] 일상 필수 형용사 & 실용 대화 표현
+        { en: "good", ko: "좋은", qEn: "How was your weekend trip?", qKo: "주말 여행은 어땠니?", sentEn: "We had a really good time at the beach.", sentKo: "해변에서 정말 좋은 시간을 보냈어." },
+        { en: "happy", ko: "행복한", qEn: "Why do you have a big smile on your face?", qKo: "왜 얼굴에 큰 미소를 짓고 있니?", sentEn: "I am so happy because I passed the exam.", sentKo: "시험에 합격해서 정말 행복해." },
+        { en: "sad", ko: "슬픈", qEn: "How was the ending of the movie?", qKo: "영화 결말이 어땠니?", sentEn: "It was so sad that I cried a lot.", sentKo: "너무 슬퍼서 많이 울었어." },
+        { en: "big", ko: "큰", qEn: "Do you need a shopping bag?", qKo: "쇼핑백이 필요하신가요?", sentEn: "Yes, please give me a big paper bag.", sentKo: "네, 큰 종이 가방으로 하나 주세요." },
+        { en: "small", ko: "작은", qEn: "Does this T-shirt fit you well?", qKo: "이 티셔츠가 잘 맞니?", sentEn: "No, it is a little too small for me.", sentKo: "아니, 나한테는 조금 너무 작아." },
+        { en: "hot", ko: "뜨거운 / 더운", qEn: "Be careful with that bowl of soup!", qKo: "그 수프 그릇 조심해!", sentEn: "Thanks, the soup is still boiling hot.", sentKo: "고마워, 수프가 아직 펄펄 끓을 정도로 뜨겁네." },
+        { en: "cold", ko: "차가운 / 추운", qEn: "Should I wear a thick coat today?", qKo: "오늘 두꺼운 코트를 입어야 할까?", sentEn: "Yes, it is freezing cold outside today.", sentKo: "응, 오늘 밖이 얼어붙을 정도로 추워." },
+        { en: "fast", ko: "빠른", qEn: "How is the Wi-Fi speed here?", qKo: "여기 와이파이 속도는 어떠니?", sentEn: "The internet here is super fast.", sentKo: "여기 인터넷은 엄청 빨라." },
+        { en: "slow", ko: "느린", qEn: "Why are we stuck in traffic?", qKo: "왜 차가 이렇게 막히지?", sentEn: "Traffic is always slow during rush hour.", sentKo: "출퇴근 시간에는 항상 차가 느리게 가." },
+        { en: "new", ko: "새로운", qEn: "Is that a new smartphone?", qKo: "그거 새로 산 스마트폰이니?", sentEn: "Yes, I bought it just yesterday.", sentKo: "응, 바로 어제 샀어." },
+        { en: "old", ko: "오래된 / 늙은", qEn: "How old is this historic castle?", qKo: "이 역사적인 성은 얼마나 오래되었나요?", sentEn: "This castle is over five hundred years old.", sentKo: "이 성은 500년이 넘었습니다." },
+        { en: "easy", ko: "쉬운", qEn: "Can you explain how to use this app?", qKo: "이 앱을 어떻게 쓰는지 설명해 줄 수 있니?", sentEn: "Sure, it is very easy to use.", sentKo: "물론이지, 사용하기 아주 쉬워." },
+        { en: "difficult", ko: "어려운", qEn: "How is learning Korean pronunciation?", qKo: "한국어 발음을 배우는 건 어떠니?", sentEn: "Some sounds are a bit difficult for me.", sentKo: "어떤 소리들은 나한테 조금 어려워." },
+        { en: "expensive", ko: "비싼", qEn: "Did you buy that designer watch?", qKo: "저 디자이너 시계를 샀니?", sentEn: "No, it was way too expensive for me.", sentKo: "아니, 나한테는 너무 비싸서 안 샀어." },
+        { en: "cheap", ko: "싼 / 저렴한", qEn: "Where did you get those nice sunglasses?", qKo: "그 멋진 선글라스 어디서 샀니?", sentEn: "I found them at a cheap street market.", sentKo: "저렴한 거리 시장에서 찾았어." },
+        { en: "busy", ko: "바쁜", qEn: "Are you free this Friday afternoon?", qKo: "이번 금요일 오후에 시간 괜찮니?", sentEn: "Sorry, I am very busy with work this week.", sentKo: "미안해, 이번 주는 일 때문에 너무 바빠." },
+        { en: "tired", ko: "피곤한", qEn: "Do you want to go out tonight?", qKo: "오늘 밤에 밖에 나가서 놀래?", sentEn: "Not tonight, I am too tired to go out.", sentKo: "오늘 밤은 안 되겠어, 나가기엔 너무 피곤해." },
+        { en: "sick", ko: "아픈", qEn: "Why was Jenny absent from class today?", qKo: "오늘 제니가 왜 수업에 결석했니?", sentEn: "She stayed home because she felt sick.", sentKo: "몸이 아파서 집에 있었어." },
+        { en: "ready", ko: "준비된", qEn: "We need to leave in five minutes!", qKo: "5분 뒤에 출발해야 해!", sentEn: "Hold on, I am almost ready to go.", sentKo: "잠깐만, 거의 다 나갈 준비가 됐어." },
+        { en: "late", ko: "늦은", qEn: "Why are you hurrying so much?", qKo: "왜 그렇게 서두르고 있니?", sentEn: "I don't want to be late for class.", sentKo: "수업에 늦고 싶지 않거든." },
+        { en: "early", ko: "이른 / 일찍", qEn: "What time did you wake up today?", qKo: "오늘 몇 시에 일어났니?", sentEn: "I woke up early at six in the morning.", sentKo: "아침 6시에 일찍 일어났어." },
+        { en: "schedule", ko: "일정 / 스케줄", qEn: "Can we move our meeting to Thursday?", qKo: "회의를 목요일로 옮길 수 있을까요?", sentEn: "Let me check my schedule first.", sentKo: "먼저 제 일정을 확인해 볼게요." },
+        { en: "cancel", ko: "취소하다", qEn: "Are we still having the outdoor picnic?", qKo: "야외 소풍은 예정대로 진행하나요?", sentEn: "We had to cancel it because of the storm.", sentKo: "폭풍우 때문에 취소해야만 했어요." },
+        { en: "receipt", ko: "영수증", qEn: "Would you like your receipt in the bag?", qKo: "영수증을 봉투에 넣어 드릴까요?", sentEn: "Yes, please give me the receipt.", sentKo: "네, 영수증 주세요." },
+        { en: "broken", ko: "고장 난 / 부서진", qEn: "Why aren't you taking the elevator?", qKo: "왜 엘리베이터를 타지 않니?", sentEn: "The elevator is broken today.", sentKo: "오늘 엘리베이터가 고장 났어." },
+
+        // [176 ~ 300] 중복 없는 실생활 필수 어휘 & 회화 125쌍 추가 (총 300쌍 완성)
+        { en: "postpone", ko: "연기하다 / 미루다", qEn: "Are we still meeting this afternoon?", qKo: "오늘 오후에 예정대로 만나나요?", sentEn: "Let's postpone our meeting until next Monday.", sentKo: "우리 회의를 다음 주 월요일로 미룹시다." },
+        { en: "available", ko: "이용 가능한 / 시간이 있는", qEn: "When are you free for a quick call?", qKo: "잠깐 통화할 수 있는 시간이 언제인가요?", sentEn: "I am available after three o'clock today.", sentKo: "저는 오늘 3시 이후에 시간이 됩니다." },
+        { en: "confirm", ko: "확인하다 / 확정하다", qEn: "Did you get my reservation details?", qKo: "제 예약 내역을 받으셨나요?", sentEn: "Yes, I am calling to confirm your booking.", sentKo: "네, 예약 내용을 확정해 드리려고 전화했습니다." },
+        { en: "arrive", ko: "도착하다", qEn: "What time will your train get here?", qKo: "기차가 몇 시에 이곳에 도착하나요?", sentEn: "Our train will arrive at ten past six.", sentKo: "우리 기차는 6시 10분에 도착할 예정입니다." },
+        { en: "leave", ko: "떠나다 / 출발하다", qEn: "When do we have to head to the station?", qKo: "언제 역으로 출발해야 하나요?", sentEn: "We must leave right now to catch the bus.", sentKo: "버스를 타려면 지금 바로 출발해야 해요." },
+        { en: "return", ko: "돌아오다 / 반납하다", qEn: "When is this library book due?", qKo: "이 도서관 책 반납일이 언제인가요?", sentEn: "I have to return this book by Friday.", sentKo: "금요일까지 이 책을 반납해야 합니다." },
+        { en: "borrow", ko: "빌리다", qEn: "I forgot to bring my umbrella today.", qKo: "오늘 우산 챙기는 것을 깜빡했어.", sentEn: "You can borrow my extra umbrella.", sentKo: "내 여분 우산을 빌려 가도 돼." },
+        { en: "lend", ko: "빌려주다", qEn: "Can you help me out with a charger?", qKo: "충전기 좀 빌려줄 수 있니?", sentEn: "Sure, I can lend you my phone charger.", sentKo: "물론이지, 내 휴대폰 충전기를 빌려줄 수 있어." },
+        { en: "exchange", ko: "교환하다", qEn: "What seems to be the problem with this shirt?", qKo: "이 셔츠에 어떤 문제가 있나요?", sentEn: "I would like to exchange it for a larger size.", sentKo: "더 큰 사이즈로 교환하고 싶습니다." },
+        { en: "refund", ko: "환불 / 환불하다", qEn: "Would you like a different color instead?", qKo: "대신 다른 색상으로 드릴까요?", sentEn: "No thank you, I would like a full refund.", sentKo: "아니요 괜찮습니다, 전액 환불받고 싶어요." },
+        { en: "discount", ko: "할인", qEn: "Is this winter coat on sale right now?", qKo: "이 겨울 코트는 지금 세일 중인가요?", sentEn: "Yes, you can get a twenty percent discount.", sentKo: "네, 20퍼센트 할인을 받으실 수 있습니다." },
+        { en: "battery", ko: "배터리", qEn: "Why did your tablet turn off suddenly?", qKo: "왜 태블릿이 갑자기 꺼졌니?", sentEn: "The battery ran out completely.", sentKo: "배터리가 완전히 다 닳았어." },
+        { en: "charge", ko: "충전하다 / 요금", qEn: "What are you looking for in the cafe?", qKo: "카페에서 무엇을 찾고 있니?", sentEn: "I need an outlet to charge my laptop.", sentKo: "노트북을 충전할 콘센트가 필요해." },
+        { en: "password", ko: "비밀번호", qEn: "How do I connect to the guest Wi-Fi?", qKo: "손님용 와이파이에 어떻게 연결하나요?", sentEn: "Please enter the password written on the wall.", sentKo: "벽에 적혀 있는 비밀번호를 입력해 주세요." },
+        { en: "message", ko: "메시지 / 전언", qEn: "Did you hear back from Sarah yet?", qKo: "사라에게서 아직 답장 들었니?", sentEn: "She just sent me a text message.", sentKo: "그녀가 방금 나에게 문자 메시지를 보냈어." },
+        { en: "address", ko: "주소", qEn: "Where should we deliver your package?", qKo: "소포를 어디로 배송해 드릴까요?", sentEn: "Please send it to my home address.", sentKo: "제 집 주소로 보내 주세요." },
+        { en: "deliver", ko: "배달하다 / 배송하다", qEn: "How long will shipping take?", qKo: "배송은 얼마나 걸릴까요?", sentEn: "We will deliver your order tomorrow morning.", sentKo: "내일 아침에 주문하신 상품을 배달해 드립니다." },
+        { en: "package", ko: "소포 / 택배 상자", qEn: "Why is there a big box at the front door?", qKo: "현관문 앞에 왜 큰 상자가 있니?", sentEn: "A package arrived for you this afternoon.", sentKo: "오늘 오후에 너에게 온 택배가 도착했어." },
+        { en: "umbrella", ko: "우산", qEn: "Did you check the weather forecast?", qKo: "일기예보 확인했니?", sentEn: "Yes, don't forget to take your umbrella.", sentKo: "응, 우산 챙기는 것 잊지 마." },
+        { en: "wallet", ko: "지갑", qEn: "Why are you checking all your pockets?", qKo: "왜 주머니를 다 뒤지고 있니?", sentEn: "I thought I left my wallet at the restaurant.", sentKo: "식당에 지갑을 두고 온 줄 알았어." },
+        { en: "key", ko: "열쇠", qEn: "Why are you standing outside the door?", qKo: "왜 문 밖에 서 있니?", sentEn: "I forgot my key inside the house.", sentKo: "집 안에 열쇠를 두고 나왔어." },
+        { en: "lock", ko: "잠그다 / 자물쇠", qEn: "Are we ready to leave the office?", qKo: "사무실에서 나갈 준비 다 되었나요?", sentEn: "Make sure you lock the back door.", sentKo: "뒷문을 꼭 잠갔는지 확인하세요." },
+        { en: "laundry", ko: "세탁물 / 빨래", qEn: "What chores do you have to do today?", qKo: "오늘 해야 할 집안일이 무엇이니?", sentEn: "I need to do the laundry this afternoon.", sentKo: "오늘 오후에 빨래를 해야 해." },
+        { en: "garbage", ko: "쓰레기", qEn: "The kitchen bin is completely full.", qKo: "부엌 쓰레기통이 꽉 찼네.", sentEn: "Could you take out the garbage tonight?", sentKo: "오늘 밤에 쓰레기 좀 내다 버려 줄래?" },
+        { en: "towel", ko: "수건", qEn: "Do you need anything in the bathroom?", qKo: "욕실에서 필요한 것 있니?", sentEn: "Please hand me a clean dry towel.", sentKo: "깨끗하고 마른 수건 하나만 건네줘." },
+        { en: "soap", ko: "비누", qEn: "Is there anything missing by the sink?", qKo: "세면대 옆에 빠진 것이 있나요?", sentEn: "We ran out of hand soap in the bathroom.", sentKo: "화장실 손 비누가 다 떨어졌어요." },
+        { en: "mirror", ko: "거울", qEn: "How does my new hat look?", qKo: "내 새 모자 어때 보여?", sentEn: "Look in the mirror and see for yourself!", sentKo: "거울을 보고 직접 확인해 봐!" },
+        { en: "blanket", ko: "담요 / 이불", qEn: "Are you feeling cold on the sofa?", qKo: "소파에서 춥게 느껴지니?", sentEn: "Yes, could you bring me a warm blanket?", sentKo: "응, 따뜻한 담요 하나 가져다줄래?" },
+        { en: "pillow", ko: "베개", qEn: "How is your hotel room?", qKo: "호텔 방은 어떠니?", sentEn: "The bed is great, and the pillow is very soft.", sentKo: "침대도 좋고 베개가 아주 푹신해." },
+        { en: "curtain", ko: "커튼", qEn: "The morning sunlight is too bright.", qKo: "아침 햇살이 너무 눈부시네.", sentEn: "Please close the curtains for a bit.", sentKo: "잠시만 커튼을 좀 쳐 줘." },
+        { en: "refrigerator", ko: "냉장고", qEn: "Where should I put the leftover pizza?", qKo: "남은 피자를 어디에 넣어 둘까요?", sentEn: "Put it inside the refrigerator, please.", sentKo: "냉장고 안에 넣어 주세요." },
+        { en: "kitchen", ko: "부엌 / 주방", qEn: "Where is your dad right now?", qKo: "지금 아빠는 어디 계시니?", sentEn: "He is making dinner in the kitchen.", sentKo: "부엌에서 저녁 식사를 만들고 계셔." },
+        { en: "bathroom", ko: "화장실 / 욕실", qEn: "Excuse me, where is the restroom?", qKo: "실례합니다, 화장실이 어디인가요?", sentEn: "The bathroom is down the hall on the right.", sentKo: "화장실은 복도 끝 오른쪽에 있습니다." },
+        { en: "stairs", ko: "계단", qEn: "How do we get to the second floor?", qKo: "2층으로 어떻게 올라가나요?", sentEn: "Walk up the stairs next to the entrance.", sentKo: "입구 옆에 있는 계단으로 올라가세요." },
+        { en: "elevator", ko: "엘리베이터", qEn: "Which floor is the toy store on?", qKo: "장난감 가게는 몇 층에 있나요?", sentEn: "Take the elevator up to the fifth floor.", sentKo: "엘리베이터를 타고 5층으로 올라가세요." },
+        { en: "floor", ko: "층 / 바닥", qEn: "Watch out! You spilled some juice.", qKo: "조심해! 주스를 좀 흘렸네.", sentEn: "I will wipe the floor with a paper towel.", sentKo: "종이타월로 바닥을 닦을게." },
+        { en: "wall", ko: "벽", qEn: "Where should we hang this family photo?", qKo: "이 가족사진을 어디에 걸까요?", sentEn: "Let's hang it on the living room wall.", sentKo: "거실 벽에 걸자." },
+        { en: "corner", ko: "모퉁이 / 구석", qEn: "Where is the nearest convenience store?", qKo: "가장 가까운 편의점이 어디인가요?", sentEn: "There is one right around the corner.", sentKo: "바로 모퉁이를 돌면 하나 있습니다." },
+        { en: "bridge", ko: "다리(교량)", qEn: "How do we cross the river to the park?", qKo: "공원으로 가려면 강을 어떻게 건너나요?", sentEn: "Walk across that white pedestrian bridge.", sentKo: "저 하얀 보행자 다리를 건너가세요." },
+        { en: "street", ko: "거리 / 도로", qEn: "Is this neighborhood safe at night?", qKo: "이 동네는 밤에도 안전한가요?", sentEn: "Yes, the main street is always bright and busy.", sentKo: "네, 큰길은 항상 밝고 사람이 많습니다." },
+        { en: "traffic", ko: "교통 / 차량 통행", qEn: "Why did it take so long to get here?", qKo: "여기까지 오는 데 왜 이렇게 오래 걸렸니?", sentEn: "The traffic was really heavy this morning.", sentKo: "오늘 아침에 차가 정말 많이 막혔어." },
+        { en: "ticket", ko: "표 / 티켓", qEn: "Did you book seats for the musical?", qKo: "뮤지컬 좌석 예매했니?", sentEn: "Yes, I already bought two tickets online.", sentKo: "응, 이미 온라인으로 표 두 장을 샀어." },
+        { en: "seat", ko: "좌석 / 자리", qEn: "Where are we sitting on the airplane?", qKo: "비행기에서 우리 자리가 어디니?", sentEn: "I reserved a window seat for you.", sentKo: "너를 위해 창가 좌석을 예약했어." },
+        { en: "passport", ko: "여권", qEn: "What do I need at the check-in counter?", qKo: "체크인 카운터에서 무엇이 필요한가요?", sentEn: "Please have your passport and ticket ready.", sentKo: "여권과 항공권을 준비해 주세요." },
+        { en: "luggage", ko: "짐 / 수하물", qEn: "Do you have any bags to check in?", qKo: "부치실 수하물이 있으신가요?", sentEn: "Yes, I have one piece of luggage.", sentKo: "네, 부칠 짐이 하나 있습니다." },
+        { en: "map", ko: "지도", qEn: "Are we lost in this old town?", qKo: "이 구시가지에서 길을 잃은 걸까?", sentEn: "Let's check the map on my smartphone.", sentKo: "내 스마트폰으로 지도를 확인해 보자." },
+        { en: "direction", ko: "방향 / 길 안내", qEn: "Which way is the museum from here?", qKo: "여기서 박물관이 어느 방향인가요?", sentEn: "We are walking in the right direction.", sentKo: "우리는 올바른 방향으로 걷고 있습니다." },
+        { en: "straight", ko: "똑바로 / 직진하여", qEn: "Should I turn left at the bank?", qKo: "은행에서 왼쪽으로 돌아야 하나요?", sentEn: "No, just go straight for two blocks.", sentKo: "아니요, 그냥 두 블록 동안 직진하세요." },
+        { en: "across", ko: "건너편에 / 가로질러", qEn: "Where is the post office located?", qKo: "우체국은 어디에 위치해 있나요?", sentEn: "It is right across from the bakery.", sentKo: "빵집 바로 맞은편에 있습니다." },
+        { en: "between", ko: "~ 사이에", qEn: "Where did you park your car?", qKo: "차를 어디에 주차했니?", sentEn: "I parked between the blue van and the tree.", sentKo: "파란 승합차와 나무 사이에 주차했어." },
+        { en: "behind", ko: "~ 뒤에", qEn: "Have you seen my backpack anywhere?", qKo: "어디서 내 배낭 못 봤니?", sentEn: "It is hiding behind the sofa.", sentKo: "소파 뒤에 가려져 있어." },
+        { en: "outside", ko: "밖에 / 외부의", qEn: "Why is the dog barking at the door?", qKo: "왜 강아지가 문을 보고 짖고 있니?", sentEn: "He wants to go outside for a walk.", sentKo: "산책하러 밖에 나가고 싶어 하는 거야." },
+        { en: "inside", ko: "안에 / 내부의", qEn: "Is it cold on the terrace?", qKo: "테라스는 춥나요?", sentEn: "Yes, let's sit inside where it is warm.", sentKo: "네, 따뜻한 실내에 들어가서 앉읍시다." },
+        { en: "weather", ko: "날씨", qEn: "What is the weather like in Seoul today?", qKo: "오늘 서울 날씨는 어떤가요?", sentEn: "The weather is sunny and warm today.", sentKo: "오늘 날씨는 맑고 따뜻합니다." },
+        { en: "windy", ko: "바람이 많이 부는", qEn: "Why are the trees shaking so much?", qKo: "왜 나무들이 저렇게 많이 흔들리니?", sentEn: "It is very windy outside this afternoon.", sentKo: "오늘 오후에는 밖에 바람이 아주 많이 불어." },
+        { en: "cloudy", ko: "구름이 낀 / 흐린", qEn: "Is it sunny at the beach right now?", qKo: "지금 해변은 맑나요?", sentEn: "No, it is a bit cloudy today.", sentKo: "아니요, 오늘은 구름이 좀 끼어 흐립니다." },
+        { en: "storm", ko: "폭풍우", qEn: "Why were all the flights delayed?", qKo: "왜 모든 항공편이 지연되었나요?", sentEn: "A big storm is coming toward the coast.", sentKo: "큰 폭풍우가 해안가로 다가오고 있어요." },
+        { en: "season", ko: "계절", qEn: "What is your favorite season of the year?", qKo: "일 년 중 가장 좋아하는 계절이 무엇인가요?", sentEn: "Autumn is my favorite season because of the cool air.", sentKo: "시원한 바람 때문에 가을을 가장 좋아합니다." },
+        { en: "spring", ko: "봄", qEn: "When do the cherry blossoms bloom?", qKo: "벚꽃은 언제 피나요?", sentEn: "They bloom every year in early spring.", sentKo: "매년 이른 봄에 핍니다." },
+        { en: "summer", ko: "여름", qEn: "Where do you go on vacation?", qKo: "휴가는 어디로 가시나요?", sentEn: "We always go swimming in the summer.", sentKo: "우리는 여름마다 항상 수영하러 갑니다." },
+        { en: "autumn", ko: "가을", qEn: "Why are the mountain leaves turning red?", qKo: "왜 산의 나뭇잎들이 붉게 변하고 있니?", sentEn: "Because autumn has finally arrived.", sentKo: "드디어 가을이 찾아왔기 때문이야." },
+        { en: "winter", ko: "겨울", qEn: "Do you enjoy skiing in the mountains?", qKo: "산에서 스키 타는 것을 즐기시나요?", sentEn: "Yes, winter is the best time for skiing.", sentKo: "네, 겨울은 스키 타기에 가장 좋은 계절입니다." },
+        { en: "weekend", ko: "주말", qEn: "Do you have any plans for the weekend?", qKo: "주말에 무슨 계획 있니?", sentEn: "I am going camping with my family this weekend.", sentKo: "이번 주말에 가족과 캠핑을 갈 거야." },
+        { en: "holiday", ko: "휴일 / 공휴일", qEn: "Do we have school tomorrow?", qKo: "내일 학교에 가나요?", sentEn: "No, tomorrow is a national holiday.", sentKo: "아니요, 내일은 공휴일이라 쉽니다." },
+        { en: "yesterday", ko: "어제", qEn: "When did you finish reading that novel?", qKo: "그 소설책을 언제 다 읽었니?", sentEn: "I finished reading it yesterday evening.", sentKo: "어제저녁에 다 읽었어." },
+        { en: "tomorrow", ko: "내일", qEn: "When will you send me the photos?", qKo: "사진은 언제 보내 줄 거니?", sentEn: "I will send them to you tomorrow morning.", sentKo: "내일 아침에 보내 줄게." },
+        { en: "tonight", ko: "오늘 밤", qEn: "What are you having for dinner?", qKo: "저녁 식사로 무엇을 먹을 거니?", sentEn: "We are ordering fried chicken tonight.", sentKo: "오늘 밤에는 프라이드치킨을 시켜 먹을 거야." },
+        { en: "always", ko: "항상 / 늘", qEn: "Is Tom usually on time for meetings?", qKo: "톰은 보통 회의 시간을 잘 지키나요?", sentEn: "Yes, he is always ten minutes early.", sentKo: "네, 그는 항상 10분 일찍 도착합니다." },
+        { en: "usually", ko: "보통 / 대개", qEn: "What time do you wake up on weekdays?", qKo: "평일에는 보통 몇 시에 일어나니?", sentEn: "I usually get up at seven in the morning.", sentKo: "보통 아침 7시에 일어나." },
+        { en: "sometimes", ko: "가끔 / 때때로", qEn: "Do you cook at home every day?", qKo: "매일 집에서 요리해 먹니?", sentEn: "I cook most days, but sometimes I eat out.", sentKo: "대부분 요리하지만 가끔은 외식을 해." },
+        { en: "never", ko: "결코 ~않다 / 한 번도", qEn: "Have you ever been to Paris?", qKo: "파리에 가 본 적이 있니?", sentEn: "No, I have never visited Europe yet.", sentKo: "아니, 아직 유럽에 한 번도 가 본 적이 없어." },
+        { en: "already", ko: "이미 / 벌써", qEn: "Should we buy snacks for the trip?", qKo: "여행용 간식을 살까요?", sentEn: "I already bought plenty of snacks.", sentKo: "내가 이미 간식을 잔뜩 사 두었어." },
+        { en: "still", ko: "아직도 / 여전히", qEn: "Is it still raining outside?", qKo: "밖에 아직도 비가 오고 있니?", sentEn: "Yes, it is still raining pretty hard.", sentKo: "응, 아직도 비가 꽤 많이 내리고 있어." },
+        { en: "soon", ko: "곧 / 머지않아", qEn: "When will dinner be ready?", qKo: "저녁 식사는 언제 준비되나요?", sentEn: "Dinner will be ready very soon.", sentKo: "저녁 식사가 아주 곧 준비될 거예요." },
+        { en: "together", ko: "함께 / 같이", qEn: "Are you going to the concert alone?", qKo: "콘서트에 혼자 가니?", sentEn: "No, my sister and I are going together.", sentKo: "아니, 언니랑 나랑 함께 갈 거야." },
+        { en: "alone", ko: "혼자서 / 단독으로", qEn: "Do you need someone to go with you?", qKo: "같이 가 줄 사람이 필요하니?", sentEn: "That's okay, I can go there alone.", sentKo: "괜찮아, 나 혼자서 거기 갈 수 있어." },
+        { en: "maybe", ko: "아마도 / 어쩌면", qEn: "Will Jake join us for lunch today?", qKo: "오늘 점심에 제이크도 함께할까?", sentEn: "Maybe, he said he might be a little late.", sentKo: "아마도, 조금 늦을 수도 있다고 했어." },
+        { en: "probably", ko: "아마 / 십중팔구", qEn: "Do you think our team will win?", qKo: "우리 팀이 이길 것 같니?", sentEn: "Yes, we will probably win this match.", sentKo: "응, 아마 우리가 이번 경기에서 이길 거야." },
+        { en: "definitely", ko: "분명히 / 틀림없이", qEn: "Are you coming to the graduation ceremony?", qKo: "졸업식에 올 거니?", sentEn: "I will definitely be there to congratulate you!", sentKo: "너를 축하해 주러 틀림없이 갈게!" },
+        { en: "agree", ko: "동의하다", qEn: "Don't you think this park is peaceful?", qKo: "이 공원이 정말 평화롭다고 생각하지 않니?", sentEn: "I completely agree with you.", sentKo: "전적으로 네 말에 동의해." },
+        { en: "promise", ko: "약속하다 / 약속", qEn: "Will you keep this a secret?", qKo: "이거 비밀로 지켜 줄 거지?", sentEn: "I promise I won't tell anyone.", sentKo: "아무에게도 말하지 않겠다고 약속할게." },
+        { en: "decide", ko: "결정하다", qEn: "Have you chosen what to order yet?", qKo: "무엇을 주문할지 벌써 정했니?", sentEn: "I still cannot decide between pasta and steak.", sentKo: "파스타와 스테이크 중에서 아직도 결정을 못 하겠어." },
+        { en: "choose", ko: "고르다 / 선택하다", qEn: "Which dessert looks better to you?", qKo: "어느 디저트가 더 맛있어 보이니?", sentEn: "You can choose whichever cake you want.", sentKo: "네가 원하는 케이크로 아무거나 골라도 돼." },
+        { en: "change", ko: "바꾸다 / 변하다 / 잔돈", qEn: "Why are you wearing a different shirt?", qKo: "왜 다른 셔츠를 입고 있니?", sentEn: "I spilled coffee, so I had to change my shirt.", sentKo: "커피를 쏟아서 셔츠를 갈아입어야 했어." },
+        { en: "check", ko: "확인하다 / 점검하다", qEn: "Did we pack everything for our flight?", qKo: "비행기 탈 짐을 다 쌌니?", sentEn: "Let me check the list one more time.", sentKo: "목록을 한 번 더 확인해 볼게." },
+        { en: "prepare", ko: "준비하다", qEn: "Are you ready for tomorrow's presentation?", qKo: "내일 발표 준비는 다 되었니?", sentEn: "I am still preparing my slides tonight.", sentKo: "오늘 밤까지 발표 자료를 준비하고 있어." },
+        { en: "practice", ko: "연습하다 / 연습", qEn: "You play the guitar so smoothly!", qKo: "기타를 정말 매끄럽게 잘 치네!", sentEn: "Thank you, I practice for an hour every day.", sentKo: "고마워, 매일 한 시간씩 연습해." },
+        { en: "improve", ko: "향상시키다 / 나아지다", qEn: "How can I get better at speaking English?", qKo: "어떻게 하면 영어 말하기 실력을 늘릴 수 있을까요?", sentEn: "Reading out loud every day will improve your speaking.", sentKo: "매일 소리 내어 읽으면 말하기 실력이 향상될 거예요." },
+        { en: "understand", ko: "이해하다", qEn: "Did you follow the instructions clearly?", qKo: "설명 내용을 명확하게 이해했니?", sentEn: "Yes, I understand everything you explained.", sentKo: "네, 설명해 주신 내용을 전부 이해했습니다." },
+        { en: "explain", ko: "설명하다", qEn: "This rule is a bit confusing to me.", qKo: "이 규칙이 나한테는 조금 헷갈리네.", sentEn: "Let me explain it to you with an easy example.", sentKo: "쉬운 예를 들어서 설명해 줄게." },
+        { en: "remember", ko: "기억하다", qEn: "Do you know where we met last year?", qKo: "작년에 우리가 어디서 만났는지 기억하니?", sentEn: "Of course, I remember that day clearly.", sentKo: "당연하지, 그날을 선명하게 기억해." },
+        { en: "forget", ko: "잊어버리다", qEn: "Did you bring your student ID card?", qKo: "학생증 챙겨 왔니?", sentEn: "Oh no, I completely forgot to bring it!", sentKo: "이런, 챙겨 오는 걸 완전히 깜빡했어!" },
+        { en: "worry", ko: "걱정하다", qEn: "I am nervous about my job interview.", qKo: "취업 면접 때문에 긴장되네.", sentEn: "Don't worry, you will do a great job!", sentKo: "걱정하지 마, 넌 정말 잘 해낼 거야!" },
+        { en: "excited", ko: "신난 / 들뜬", qEn: "Are you looking forward to the summer camp?", qKo: "여름 캠프가 기대되니?", sentEn: "Yes! I am super excited about going.", sentKo: "응! 가게 되어서 정말 신나." },
+        { en: "surprised", ko: "놀란", qEn: "Did Mia like her surprise birthday gift?", qKo: "미아가 깜짝 생일 선물을 마음에 들어 했니?", sentEn: "She was very surprised and touched.", sentKo: "그녀는 아주 놀라고 감동했어." },
+        { en: "bored", ko: "지루해하는", qEn: "Why are you yawning so much?", qKo: "왜 그렇게 하품을 많이 하니?", sentEn: "I am a little bored because there is nothing to do.", sentKo: "할 일이 아무것도 없어서 조금 지루해." },
+        { en: "angry", ko: "화난", qEn: "Why is Mark not talking to anyone?", qKo: "왜 마크가 아무하고도 말을 안 하니?", sentEn: "He is angry because someone broke his bicycle.", sentKo: "누군가 자기 자전거를 망가뜨려서 화가 났어." },
+        { en: "afraid", ko: "두려워하는 / 무서워하는", qEn: "Do you want to ride the giant roller coaster?", qKo: "저 거대한 롤러코스터 탈래?", sentEn: "No thanks, I am afraid of high places.", sentKo: "아니 괜찮아, 나는 높은 곳을 무서워해." },
+        { en: "proud", ko: "자랑스러운", qEn: "I won first place in the speech contest!", qKo: "말하기 대회에서 1등을 했어!", sentEn: "Congratulations! I am so proud of you.", sentKo: "축하해! 네가 정말 자랑스러워." },
+        { en: "polite", ko: "예의 바른", qEn: "What do you think of our new neighbor?", qKo: "새로 이사 온 이웃분이 어떤 것 같니?", sentEn: "He is very friendly and polite to everyone.", sentKo: "모든 사람에게 아주 친절하고 예의 바르셔." },
+        { en: "honest", ko: "정직한 / 솔직한", qEn: "Do you really like my new haircut?", qKo: "내 새 헤어스타일이 정말 마음에 드니?", sentEn: "To be honest, I liked your longer hair better.", sentKo: "솔직히 말하면 긴 머리가 더 잘 어울렸어." },
+        { en: "careful", ko: "조심하는 / 신중한", qEn: "It just rained, so the stairs are wet.", qKo: "방금 비가 와서 계단이 젖어 있어.", sentEn: "Be careful not to slip on the wet stairs.", sentKo: "젖은 계단에서 미끄러지지 않도록 조심해." },
+        { en: "dangerous", ko: "위험한", qEn: "Can we swim in that deep river?", qKo: "저 깊은 강에서 수영해도 될까?", sentEn: "No, swimming there is very dangerous.", sentKo: "아니, 거기서 수영하는 것은 매우 위험해." },
+        { en: "safe", ko: "안전한", qEn: "Did you make it home alright?", qKo: "집에 무사히 잘 도착했니?", sentEn: "Yes, I am safe at home now.", sentKo: "응, 지금 집에 안전하게 잘 왔어." },
+        { en: "healthy", ko: "건강한", qEn: "Why do you eat salad every day?", qKo: "왜 매일 샐러드를 먹니?", sentEn: "Eating fresh vegetables keeps me healthy.", sentKo: "신선한 채소를 먹으면 건강을 유지할 수 있거든." },
+        { en: "headache", ko: "두통", qEn: "Why are you lying down with your eyes closed?", qKo: "왜 눈을 감고 누워 있니?", sentEn: "I have a bad headache this afternoon.", sentKo: "오늘 오후에 두통이 심해." },
+        { en: "medicine", ko: "약", qEn: "Did you take anything for your cold?", qKo: "감기 때문에 약은 좀 먹었니?", sentEn: "Yes, I took some medicine after lunch.", sentKo: "응, 점심 식사 후에 약을 좀 먹었어." },
+        { en: "restroom", ko: "화장실", qEn: "Is there a bathroom near the food court?", qKo: "푸드코트 근처에 화장실이 있나요?", sentEn: "Yes, the restroom is right behind the elevator.", sentKo: "네, 화장실은 엘리베이터 바로 뒤에 있습니다." },
+        { en: "elevator", ko: "승강기 / 엘리베이터", qEn: "Should we walk up to the eighth floor?", qKo: "8층까지 걸어 올라갈까요?", sentEn: "Let's take the elevator instead of the stairs.", sentKo: "계단 대신 엘리베이터를 타고 올라갑시다." },
+        { en: "entrance", ko: "입구", qEn: "Where should we wait for the tour guide?", qKo: "투어 가이드를 어디서 기다릴까요?", sentEn: "Let's stand near the main entrance.", sentKo: "정문 입구 근처에 서 있자." },
+        { en: "exit", ko: "출구", qEn: "How do we get out of this huge mall?", qKo: "이 거대한 쇼핑몰에서 어떻게 나가나요?", sentEn: "Follow the green exit signs over there.", sentKo: "저쪽에 있는 초록색 출구 표지판을 따라가세요." },
+        { en: "stairs", ko: "계단(오르내리기)", qEn: "Why are you out of breath?", qKo: "왜 숨이 차 있니?", sentEn: "I ran up four flights of stairs.", sentKo: "계단을 네 층이나 뛰어 올라왔거든." },
+        { en: "crowded", ko: "붐비는 / 사람이 많은", qEn: "How was the subway this morning?", qKo: "오늘 아침 지하철은 어땠니?", sentEn: "It was so crowded that I couldn't sit down.", sentKo: "사람이 너무 붐벼서 앉을 수가 없었어." },
+        { en: "quiet", ko: "조용한", qEn: "Why do you like studying at this cafe?", qKo: "왜 이 카페에서 공부하는 것을 좋아하니?", sentEn: "Because it is always quiet and cozy here.", sentKo: "여기는 항상 조용하고 아늑하기 때문이야." },
+        { en: "noisy", ko: "시끄러운", qEn: "Can you hear me well on the phone?", qKo: "전화기 너머로 내 목소리가 잘 들리니?", sentEn: "Sorry, it is too noisy outside right now.", sentKo: "미안해, 지금 밖이 너무 시끄러워." },
+        { en: "comfortable", ko: "편안한", qEn: "How do you like your new sneakers?", qKo: "새 운동화 신어 보니 어떠니?", sentEn: "They are super light and comfortable.", sentKo: "엄청 가볍고 발이 편안해." },
+        { en: "convenient", ko: "편리한", qEn: "Why did you move near the station?", qKo: "왜 역 근처로 이사했니?", sentEn: "Living near the subway is very convenient.", sentKo: "지하철 근처에 사는 것이 매우 편리하거든." },
+        { en: "important", ko: "중요한", qEn: "Why are you double-checking that file?", qKo: "왜 그 파일을 두 번이나 확인하고 있니?", sentEn: "This report is very important for tomorrow's meeting.", sentKo: "이 보고서는 내일 회의에 매우 중요하거든." },
+        { en: "special", ko: "특별한", qEn: "Why did you buy flowers and a cake?", qKo: "왜 꽃이랑 케이크를 샀니?", sentEn: "Today is a special day for my parents.", sentKo: "오늘은 부모님께 특별한 날이거든." },
+        { en: "popular", ko: "인기 있는", qEn: "Why is there such a long line outside?", qKo: "왜 밖에 줄이 저렇게 길게 서 있니?", sentEn: "This bakery is very popular on social media.", sentKo: "이 빵집은 소셜 미디어에서 아주 인기가 많거든." },
+        { en: "famous", ko: "유명한", qEn: "What is this city best known for?", qKo: "이 도시는 무엇으로 가장 잘 알려져 있나요?", sentEn: "It is famous for its beautiful night view.", sentKo: "아름다운 야경으로 유명합니다." },
+        { en: "different", ko: "다른", qEn: "Do you and your twin brother look alike?", qKo: "너랑 쌍둥이 형은 닮았니?", sentEn: "We look similar, but our personalities are different.", sentKo: "외모는 비슷하지만 성격은 서로 달라." },
+        { en: "same", ko: "같은 / 똑같은", qEn: "Hey, look at our shoes!", qKo: "어, 우리 신발 좀 봐!", sentEn: "We bought the exact same pair of shoes!", sentKo: "우리가 완전히 똑같은 신발을 샀네!" },
+        { en: "favorite", ko: "가장 좋아하는", qEn: "What song do you listen to the most?", qKo: "어떤 노래를 가장 많이 듣니?", sentEn: "This jazz song is my all-time favorite.", sentKo: "이 재즈 곡이 내가 제일 좋아하는 노래야." },
+        { en: "hobby", ko: "취미", qEn: "What do you usually do on Sundays?", qKo: "일요일에는 보통 무엇을 하니?", sentEn: "My favorite hobby is taking nature photos.", sentKo: "내가 가장 좋아하는 취미는 자연 사진을 찍는 거야." },
+        { en: "exercise", ko: "운동하다 / 운동", qEn: "How do you stay so energetic?", qKo: "어떻게 그렇게 활력이 넘치니?", sentEn: "I try to exercise at least three times a week.", sentKo: "일주일에 적어도 세 번은 운동하려고 노력해." },
+        { en: "hobbyist", ko: "애호가 / 취미인", qEn: "Did you bake this sourdough bread yourself?", qKo: "이 사워도우 빵을 직접 구우셨나요?", sentEn: "Yes, I am an enthusiastic home baking hobbyist.", sentKo: "네, 저는 열정적인 홈 베이킹 애호가입니다." }
+      ];
+
+      // 중복 제거 및 커리큘럼 데이터 확정
+      const seenWords = new Set();
+      const CURRICULUM_DATA = [];
+      RAW_CURRICULUM_DATA.forEach(function (item) {
+        const key = item.en.toLowerCase();
+        if (!seenWords.has(key)) {
+          seenWords.add(key);
+          CURRICULUM_DATA.push(item);
+        }
+      });
+
+      const TOTAL_ITEMS_COUNT = CURRICULUM_DATA.length;
+
+      // =========================================================================
+      // 3. 던전 몬스터 로스터 & SVG 스프라이트 정의 (일반 12종 + 보스 6종 = 총 18종)
+      // =========================================================================
+      const MONSTER_ROSTER = [
+        {
+          name: "초원 슬라임",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 72 C18 42, 34 26, 50 26 C66 26, 82 42, 82 72 C82 82, 70 86, 50 86 C30 86, 18 82, 18 72 Z" fill="#22c55e" stroke="#86efac" stroke-width="3"/>
+            <ellipse cx="38" cy="40" rx="8" ry="4" transform="rotate(-25 38 40)" fill="#bbf7d0" opacity="0.7"/>
+            <circle cx="38" cy="58" r="5" fill="#052e16"/>
+            <circle cx="62" cy="58" r="5" fill="#052e16"/>
+            <circle cx="39" cy="56" r="1.8" fill="#fff"/>
+            <circle cx="63" cy="56" r="1.8" fill="#fff"/>
+            <path d="M43 70 Q50 76 57 70" stroke="#052e16" stroke-width="3" stroke-linecap="round"/>
+          </svg>`
+        },
+        {
+          name: "숲속 고블린",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="10,44 28,38 26,54" fill="#65a30d"/>
+            <polygon points="90,44 72,38 74,54" fill="#65a30d"/>
+            <rect x="26" y="26" width="48" height="44" rx="16" fill="#84cc16" stroke="#bef264" stroke-width="2.5"/>
+            <rect x="30" y="70" width="40" height="16" rx="6" fill="#78350f"/>
+            <circle cx="39" cy="46" r="5" fill="#fef08a"/>
+            <circle cx="61" cy="46" r="5" fill="#fef08a"/>
+            <circle cx="39" cy="46" r="2.2" fill="#991b1b"/>
+            <circle cx="61" cy="46" r="2.2" fill="#991b1b"/>
+            <path d="M36 60 L64 60" stroke="#1a2e05" stroke-width="3"/>
+            <polygon points="40,60 43,54 46,60" fill="#fff"/>
+            <polygon points="54,60 57,54 60,60" fill="#fff"/>
+          </svg>`
+        },
+        {
+          name: "유령 기사",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 52 C24 26, 76 26, 76 52 L78 84 L65 74 L50 85 L35 74 L22 84 Z" fill="#8b5cf6" stroke="#ddd6fe" stroke-width="2.5"/>
+            <circle cx="40" cy="48" r="6" fill="#fef08a"/>
+            <circle cx="60" cy="48" r="6" fill="#fef08a"/>
+            <ellipse cx="50" cy="64" rx="7" ry="9" fill="#2e1065"/>
+          </svg>`
+        },
+        {
+          name: "용암 골렘",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="22" y="24" width="56" height="58" rx="10" fill="#57534e" stroke="#a8a29e" stroke-width="3"/>
+            <path d="M30 34 L46 44 M70 34 L54 44" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+            <rect x="32" y="46" width="12" height="6" rx="2" fill="#fb923c"/>
+            <rect x="56" y="46" width="12" height="6" rx="2" fill="#fb923c"/>
+            <path d="M34 68 L44 63 L56 68 L66 63" stroke="#ea580c" stroke-width="4" stroke-linecap="round"/>
+          </svg>`
+        },
+        {
+          name: "사막 미라",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="28" y="20" width="44" height="64" rx="18" fill="#fef3c7" stroke="#d97706" stroke-width="2.5"/>
+            <path d="M28 34 L72 38 M28 50 L72 46 M28 64 L72 68 M28 76 L72 74" stroke="#b45309" stroke-width="3"/>
+            <rect x="32" y="38" width="36" height="10" rx="4" fill="#451a03"/>
+            <circle cx="41" cy="43" r="3.5" fill="#facc15"/>
+            <circle cx="59" cy="43" r="3.5" fill="#facc15"/>
+          </svg>`
+        },
+        {
+          name: "빙하 설인",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 76 C20 40, 32 22, 50 22 C68 22, 80 40, 78 76 Z" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3"/>
+            <rect x="33" y="36" width="34" height="22" rx="10" fill="#0284c7"/>
+            <circle cx="42" cy="46" r="4" fill="#fef08a"/>
+            <circle cx="58" cy="46" r="4" fill="#fef08a"/>
+            <path d="M40 66 L46 62 L50 66 L54 62 L60 66" stroke="#0369a1" stroke-width="3" stroke-linecap="round"/>
+          </svg>`
+        },
+        {
+          name: "심해 크라켄",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M26 52 C26 24, 74 24, 74 52 L70 66 L30 66 Z" fill="#0ea5e9" stroke="#bae6fd" stroke-width="2.5"/>
+            <path d="M24 66 Q16 78 24 86 M40 66 Q36 80 42 88 M60 66 Q64 80 58 88 M76 66 Q84 78 76 86" stroke="#0284c7" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="40" cy="48" r="5.5" fill="#fef08a"/>
+            <circle cx="60" cy="48" r="5.5" fill="#fef08a"/>
+            <circle cx="40" cy="48" r="2.2" fill="#0f172a"/>
+            <circle cx="60" cy="48" r="2.2" fill="#0f172a"/>
+          </svg>`
+        },
+        {
+          name: "독버섯 포자",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="36" y="54" width="28" height="30" rx="8" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+            <path d="M16 56 C16 24, 84 24, 84 56 Z" fill="#c026d3" stroke="#f5d0fe" stroke-width="2.5"/>
+            <circle cx="34" cy="40" r="5" fill="#fdf4ff"/>
+            <circle cx="54" cy="34" r="6" fill="#fdf4ff"/>
+            <circle cx="68" cy="44" r="4" fill="#fdf4ff"/>
+            <circle cx="44" cy="68" r="3" fill="#1e1b4b"/>
+            <circle cx="56" cy="68" r="3" fill="#1e1b4b"/>
+          </svg>`
+        },
+        {
+          name: "번개 박쥐",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="8,36 34,44 26,64 14,54" fill="#4f46e5"/>
+            <polygon points="92,36 66,44 74,64 86,54" fill="#4f46e5"/>
+            <circle cx="50" cy="54" r="18" fill="#312e81" stroke="#facc15" stroke-width="2.5"/>
+            <polygon points="38,38 34,24 46,36" fill="#facc15"/>
+            <polygon points="62,38 66,24 54,36" fill="#facc15"/>
+            <circle cx="43" cy="52" r="4" fill="#fef08a"/>
+            <circle cx="57" cy="52" r="4" fill="#fef08a"/>
+            <polygon points="44,62 47,68 50,62" fill="#fff"/>
+            <polygon points="50,62 53,68 56,62" fill="#fff"/>
+          </svg>`
+        },
+        {
+          name: "태엽 로봇",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="50" y1="12" x2="50" y2="26" stroke="#94a3b8" stroke-width="4"/>
+            <circle cx="50" cy="12" r="5" fill="#ef4444"/>
+            <rect x="24" y="26" width="52" height="44" rx="8" fill="#64748b" stroke="#cbd5e1" stroke-width="3"/>
+            <rect x="32" y="38" width="36" height="14" rx="4" fill="#0f172a"/>
+            <circle cx="42" cy="45" r="4" fill="#22d3ee"/>
+            <circle cx="58" cy="45" r="4" fill="#22d3ee"/>
+            <rect x="36" y="58" width="28" height="6" rx="2" fill="#fbbf24"/>
+            <rect x="34" y="70" width="10" height="14" fill="#475569"/>
+            <rect x="56" y="70" width="10" height="14" fill="#475569"/>
+          </svg>`
+        },
+        {
+          name: "그림자 늑대",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="26,38 22,14 42,28" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+            <polygon points="74,38 78,14 58,28" fill="#1e293b" stroke="#94a3b8" stroke-width="2"/>
+            <path d="M24 44 C24 26, 76 26, 76 44 L68 78 L50 86 L32 78 Z" fill="#334155" stroke="#cbd5e1" stroke-width="2.5"/>
+            <polygon points="34,48 44,52 34,55" fill="#f43f5e"/>
+            <polygon points="66,48 56,52 66,55" fill="#f43f5e"/>
+            <polygon points="50,60 45,66 55,66" fill="#0f172a"/>
+            <path d="M38 72 L44 68 L50 73 L56 68 L62 72" stroke="#f8fafc" stroke-width="2.5"/>
+          </svg>`
+        },
+        {
+          name: "황금 미믹",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="28" width="60" height="22" rx="6" fill="#b45309" stroke="#fbbf24" stroke-width="3"/>
+            <rect x="20" y="54" width="60" height="28" rx="6" fill="#92400e" stroke="#fbbf24" stroke-width="3"/>
+            <polygon points="26,50 32,58 38,50 44,58 50,50 56,58 62,50 68,58 74,50" fill="#fff"/>
+            <circle cx="38" cy="39" r="4" fill="#ef4444"/>
+            <circle cx="62" cy="39" r="4" fill="#ef4444"/>
+            <path d="M46 56 Q56 76 68 68" stroke="#f43f5e" stroke-width="7" stroke-linecap="round"/>
+          </svg>`
+        }
+      ];
+
+      const BOSS_MONSTERS = [
+        {
+          name: "👑 [BOSS] 화염 드래곤",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="8,36 28,22 26,56" fill="#b91c1c"/>
+            <polygon points="92,36 72,22 74,56" fill="#b91c1c"/>
+            <polygon points="32,26 24,8 42,20" fill="#fbbf24"/>
+            <polygon points="68,26 76,8 58,20" fill="#fbbf24"/>
+            <rect x="26" y="22" width="48" height="56" rx="18" fill="#ef4444" stroke="#fca5a5" stroke-width="3"/>
+            <circle cx="40" cy="44" r="6" fill="#fef08a"/>
+            <circle cx="60" cy="44" r="6" fill="#fef08a"/>
+            <circle cx="40" cy="44" r="2.5" fill="#7f1d1d"/>
+            <circle cx="60" cy="44" r="2.5" fill="#7f1d1d"/>
+            <path d="M35 64 Q50 56 65 64" stroke="#450a0a" stroke-width="4" stroke-linecap="round"/>
+            <polygon points="38,63 42,71 46,62" fill="#fff"/>
+            <polygon points="54,62 58,71 62,63" fill="#fff"/>
+          </svg>`
+        },
+        {
+          name: "👑 [BOSS] 암흑 마왕",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 84 L30 28 L70 28 L80 84 Z" fill="#312e81" stroke="#818cf8" stroke-width="2.5"/>
+            <polygon points="28,30 18,10 40,24" fill="#a855f7"/>
+            <polygon points="72,30 82,10 60,24" fill="#a855f7"/>
+            <circle cx="50" cy="42" r="18" fill="#1e1b4b" stroke="#c084fc" stroke-width="2.5"/>
+            <ellipse cx="43" cy="41" rx="5" ry="3" fill="#f43f5e"/>
+            <ellipse cx="57" cy="41" rx="5" ry="3" fill="#f43f5e"/>
+            <polygon points="50,56 44,68 56,68" fill="#fbbf24"/>
+          </svg>`
+        },
+        {
+          name: "👑 [BOSS] 빙결 리치 킹",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="30,24 36,10 44,22 50,8 56,22 64,10 70,24" fill="#38bdf8" stroke="#e0f2fe" stroke-width="2"/>
+            <path d="M22 84 L30 30 L70 30 L78 84 Z" fill="#0c4a6e" stroke="#7dd3fc" stroke-width="2.5"/>
+            <rect x="34" y="26" width="32" height="32" rx="12" fill="#f0f9ff" stroke="#38bdf8" stroke-width="2.5"/>
+            <circle cx="43" cy="40" r="4.5" fill="#0284c7"/>
+            <circle cx="57" cy="40" r="4.5" fill="#0284c7"/>
+            <path d="M40 50 L60 50 M44 47 L44 53 M50 47 L50 53 M56 47 L56 53" stroke="#0369a1" stroke-width="2"/>
+          </svg>`
+        },
+        {
+          name: "👑 [BOSS] 폭풍 그리폰",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="6,30 30,26 24,58" fill="#f59e0b"/>
+            <polygon points="94,30 70,26 76,58" fill="#f59e0b"/>
+            <circle cx="50" cy="50" r="24" fill="#fef3c7" stroke="#f59e0b" stroke-width="3"/>
+            <polygon points="50,48 40,56 50,64 60,56" fill="#ea580c"/>
+            <circle cx="40" cy="42" r="4.5" fill="#0f172a"/>
+            <circle cx="60" cy="42" r="4.5" fill="#0f172a"/>
+            <path d="M34 26 L44 34 M66 26 L56 34" stroke="#b45309" stroke-width="3.5" stroke-linecap="round"/>
+          </svg>`
+        },
+        {
+          name: "👑 [BOSS] 심연의 히드라",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M34 78 C20 62, 16 42, 26 28" stroke="#10b981" stroke-width="10" stroke-linecap="round"/>
+            <path d="M66 78 C80 62, 84 42, 74 28" stroke="#10b981" stroke-width="10" stroke-linecap="round"/>
+            <path d="M50 82 L50 22" stroke="#059669" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="26" cy="26" r="10" fill="#34d399" stroke="#064e3b" stroke-width="2"/>
+            <circle cx="74" cy="26" r="10" fill="#34d399" stroke="#064e3b" stroke-width="2"/>
+            <circle cx="50" cy="20" r="12" fill="#34d399" stroke="#064e3b" stroke-width="2.5"/>
+            <circle cx="46" cy="18" r="2.5" fill="#fef08a"/>
+            <circle cx="54" cy="18" r="2.5" fill="#fef08a"/>
+          </svg>`
+        },
+        {
+          name: "👑 [BOSS] 기계 황제 오메가",
+          svg: `<svg class="monster-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="16" y="22" width="68" height="60" rx="12" fill="#1e293b" stroke="#facc15" stroke-width="3.5"/>
+            <polygon points="32,22 40,10 50,20 60,10 68,22" fill="#facc15"/>
+            <rect x="26" y="36" width="48" height="16" rx="4" fill="#090d16" stroke="#ef4444" stroke-width="2"/>
+            <rect x="32" y="42" width="36" height="4" fill="#ef4444"/>
+            <rect x="30" y="60" width="40" height="10" rx="3" fill="#475569"/>
+            <line x1="38" y1="60" x2="38" y2="70" stroke="#facc15" stroke-width="2"/>
+            <line x1="50" y1="60" x2="50" y2="70" stroke="#facc15" stroke-width="2"/>
+            <line x1="62" y1="60" x2="62" y2="70" stroke="#facc15" stroke-width="2"/>
+          </svg>`
+        }
+      ];
+
+      // =========================================================================
+      // 4. 게임 상태 변수 선언
+      // =========================================================================
+      let learnerName = "용사";
+      let totalScore = 0;
+      let monstersDefeated = 0;
+      let totalAttempts = 0;
+      let correctAttempts = 0;
+      let comboCount = 0;
+      let stageNumber = 1;
+
+      const HERO_MAX_HP = 100;
+      let heroHp = HERO_MAX_HP;
+
+      let monsterMaxHp = 5;
+      let monsterHp = 5;
+      let isBossStage = false;
+
+      let learningMode = "hybrid"; // 'hybrid' | 'vocab' | 'conv'
+      let currentStageType = "vocab"; // 'vocab' | 'conv'
+      let deckQueue = [];
+      let lastStageItems = [];
+
+      let stageQuestions = [];
+      let currentQuestionIdx = 0;
+      let isChecking = false;
+
+      // =========================================================================
+      // 5. 유틸리티 및 덱(Deck) 순환 관리 함수
+      // =========================================================================
+      function shuffleArray(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = copy[i];
+          copy[i] = copy[j];
+          copy[j] = temp;
+        }
+        return copy;
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toastMsg");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(function () {
+          toast.classList.remove("show");
+        }, 2200);
+      }
+
+      function speakEnglishText(rawText) {
+        try {
+          if (!("speechSynthesis" in window)) {
+            showToast("⚠️ 현재 브라우저에서는 음성 듣기를 지원하지 않습니다.");
+            return;
+          }
+          const cleanText = String(rawText || "").replace(/[“”"]/g, "").trim();
+          if (!cleanText) return;
+
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.lang = "en-US";
+          utterance.rate = 0.95;
+          window.speechSynthesis.speak(utterance);
+        } catch (err) {
+          console.error("TTS 재생 오류:", err);
+        }
+      }
+
+      function refillDeckQueue() {
+        deckQueue = shuffleArray(CURRICULUM_DATA);
+      }
+
+      function drawFromDeck(count) {
+        if (deckQueue.length < count) {
+          refillDeckQueue();
+          showToast("🔄 300선 전체 몬스터 덱을 1회 순환하여 새롭게 셔플했습니다!");
+        }
+        return deckQueue.splice(0, count);
+      }
+
+      function updateProfileUI() {
+        const nameEl = document.getElementById("profileName");
+        const heroHudName = document.getElementById("heroHudName");
+        const scoreEl = document.getElementById("profileScore");
+        const killsEl = document.getElementById("profileKills");
+        const accEl = document.getElementById("profileAccuracy");
+
+        if (nameEl) nameEl.textContent = learnerName;
+        if (heroHudName) heroHudName.textContent = learnerName;
+        if (scoreEl) scoreEl.textContent = totalScore + "점";
+        if (killsEl) killsEl.textContent = monstersDefeated + "마리";
+
+        const accuracy = totalAttempts === 0
+          ? 100
+          : Math.round((correctAttempts / totalAttempts) * 100);
+        if (accEl) accEl.textContent = accuracy + "%";
+      }
+
+      function updateBattleHpBars() {
+        const heroPct = Math.max(0, Math.round((heroHp / HERO_MAX_HP) * 100));
+        const monsterPct = Math.max(0, Math.round((monsterHp / monsterMaxHp) * 100));
+
+        document.getElementById("heroHpText").textContent = heroHp + " / " + HERO_MAX_HP;
+        document.getElementById("heroHpBar").style.width = heroPct + "%";
+
+        document.getElementById("monsterHpText").textContent = monsterHp + " / " + monsterMaxHp;
+        document.getElementById("monsterHpBar").style.width = monsterPct + "%";
+
+        const comboBadge = document.getElementById("comboBadge");
+        comboBadge.textContent = "🔥 " + comboCount + " COMBO";
+      }
+
+      function triggerAttackAnimation(isHeroAttacking, popupText) {
+        const heroSvg = document.getElementById("heroSvg");
+        const monsterWrap = document.getElementById("monsterSpriteWrap");
+        const slashFx = document.getElementById("slashFx");
+        const arena = document.getElementById("battleArena");
+
+        if (isHeroAttacking) {
+          heroSvg.classList.remove("hero-attack-anim");
+          void heroSvg.offsetWidth;
+          heroSvg.classList.add("hero-attack-anim");
+
+          slashFx.textContent = comboCount >= 3 ? "⚡💥" : "⚔️💥";
+          slashFx.classList.remove("active");
+          void slashFx.offsetWidth;
+          slashFx.classList.add("active");
+
+          setTimeout(function () {
+            monsterWrap.classList.remove("hit-shake");
+            void monsterWrap.offsetWidth;
+            monsterWrap.classList.add("hit-shake");
+
+            const mDmg = document.getElementById("monsterDmgPopup");
+            mDmg.textContent = popupText;
+            mDmg.classList.remove("show-dmg");
+            void mDmg.offsetWidth;
+            mDmg.classList.add("show-dmg");
+          }, 140);
+        } else {
+          monsterWrap.classList.remove("monster-attack-anim");
+          void monsterWrap.offsetWidth;
+          monsterWrap.classList.add("monster-attack-anim");
+
+          slashFx.textContent = "🔥💢";
+          slashFx.classList.remove("active");
+          void slashFx.offsetWidth;
+          slashFx.classList.add("active");
+
+          setTimeout(function () {
+            const heroWrap = document.getElementById("heroSpriteWrap");
+            heroWrap.classList.remove("hit-shake");
+            void heroWrap.offsetWidth;
+            heroWrap.classList.add("hit-shake");
+
+            arena.classList.remove("arena-shake");
+            void arena.offsetWidth;
+            arena.classList.add("arena-shake");
+
+            const hDmg = document.getElementById("heroDmgPopup");
+            hDmg.textContent = popupText;
+            hDmg.classList.remove("show-dmg");
+            void hDmg.offsetWidth;
+            hDmg.classList.add("show-dmg");
+          }, 140);
+        }
+      }
+
+      // =========================================================================
+      // 6. 던전 시작 및 모드 전환 이벤트 바인딩
+      // =========================================================================
+      function handleStartGame() {
+        const nameInput = document.getElementById("learnerNameInput");
+        const inputVal = nameInput ? nameInput.value.trim() : "";
+        learnerName = inputVal || "용사";
+
+        totalScore = 0;
+        monstersDefeated = 0;
+        totalAttempts = 0;
+        correctAttempts = 0;
+        comboCount = 0;
+        stageNumber = 1;
+        heroHp = HERO_MAX_HP;
+        lastStageItems = [];
+
+        refillDeckQueue();
+        updateProfileUI();
+
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("gamePlayArea").style.display = "block";
+
+        startDungeonStage();
+      }
+
+      function switchLearningMode(newMode) {
+        if (learningMode === newMode) return;
+        learningMode = newMode;
+
+        const modeBtnIds = {
+          hybrid: "modeHybrid",
+          vocab: "modeVocab",
+          conv: "modeConv"
+        };
+
+        Object.keys(modeBtnIds).forEach(function (key) {
+          const btn = document.getElementById(modeBtnIds[key]);
+          if (btn) {
+            if (key === newMode) {
+              btn.classList.add("active");
+            } else {
+              btn.classList.remove("active");
+            }
+          }
+        });
+
+        lastStageItems = [];
+        startDungeonStage();
+      }
+
+      document.getElementById("btnStartGame").addEventListener("click", handleStartGame);
+
+      document.getElementById("learnerNameInput").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleStartGame();
+        }
+      });
+
+      document.getElementById("modeHybrid").addEventListener("click", function () {
+        switchLearningMode("hybrid");
+      });
+      document.getElementById("modeVocab").addEventListener("click", function () {
+        switchLearningMode("vocab");
+      });
+      document.getElementById("modeConv").addEventListener("click", function () {
+        switchLearningMode("conv");
+      });
+
+      document.getElementById("nextStageBtn").addEventListener("click", function () {
+        if (heroHp <= 0) {
+          // 용사 사망 시 처치 몬스터 수, 콤보, 스테이지(Floor 1) 초기화 후 재시작
+          heroHp = HERO_MAX_HP;
+          monstersDefeated = 0;
+          comboCount = 0;
+          stageNumber = 1;
+          lastStageItems = [];
+          updateProfileUI();
+          showToast("💀 용사가 쓰러져 처치 기록이 초기화되고 Floor 1부터 다시 시작합니다!");
+          startDungeonStage();
+        } else {
+          heroHp = Math.min(HERO_MAX_HP, heroHp + 25);
+          stageNumber += 1;
+          startDungeonStage();
+        }
+      });
+
+      // =========================================================================
+      // 7. 던전 스테이지 초기화 (5층마다 보스 몬스터 출현)
+      // =========================================================================
+      function startDungeonStage() {
+        isChecking = false;
+        currentQuestionIdx = 0;
+
+        isBossStage = (stageNumber % 5 === 0);
+        const questionCount = isBossStage ? 7 : 5;
+        monsterMaxHp = questionCount;
+        monsterHp = questionCount;
+
+        const arena = document.getElementById("battleArena");
+        const stagePill = document.getElementById("arenaStageBadge");
+        const monsterNameEl = document.getElementById("monsterNameText");
+        const monsterSvgBox = document.getElementById("monsterSvgContainer");
+
+        if (isBossStage) {
+          arena.classList.add("boss-arena");
+          stagePill.className = "stage-pill boss-pill";
+          stagePill.textContent = "🔥 FLOOR " + stageNumber + " · 보스 출현!";
+          const bossData = BOSS_MONSTERS[(Math.floor(stageNumber / 5) - 1) % BOSS_MONSTERS.length];
+          monsterNameEl.textContent = bossData.name;
+          monsterSvgBox.innerHTML = bossData.svg;
+        } else {
+          arena.classList.remove("boss-arena");
+          stagePill.className = "stage-pill";
+          stagePill.textContent = "FLOOR " + stageNumber + " · 던전 배틀";
+          const monData = MONSTER_ROSTER[(stageNumber - 1 - Math.floor((stageNumber - 1) / 5)) % MONSTER_ROSTER.length];
+          monsterNameEl.textContent = monData.name;
+          monsterSvgBox.innerHTML = monData.svg;
+        }
+
+        document.getElementById("stageResultBox").style.display = "none";
+        document.getElementById("skillOptionsList").style.display = "flex";
+        updateBattleHpBars();
+
+        if (learningMode === "hybrid") {
+          currentStageType = (stageNumber % 2 === 1) ? "vocab" : "conv";
+        } else {
+          currentStageType = learningMode;
+        }
+
+        let selectedItems = [];
+        if (learningMode === "hybrid" && currentStageType === "conv" && lastStageItems.length === questionCount) {
+          selectedItems = lastStageItems.slice();
+        } else {
+          selectedItems = drawFromDeck(questionCount);
+          lastStageItems = selectedItems.slice();
+        }
+
+        document.getElementById("deckRemainingText").textContent =
+          "남은 덱: " + deckQueue.length + " / " + TOTAL_ITEMS_COUNT + "개";
+
+        const banner = document.getElementById("stageBanner");
+        const bannerText = document.getElementById("stageBannerText");
+        const questScroll = document.getElementById("questScrollBox");
+        const questHintRow = document.getElementById("questHintRow");
+
+        if (currentStageType === "vocab") {
+          banner.className = "stage-banner vocab-stage";
+          bannerText.innerHTML = "📘 Floor " + stageNumber + " · <b>[기초 어휘 던전]</b> 영어 단어에 맞는 한글 뜻을 골라 공격하세요!";
+          questScroll.className = "quest-scroll-box";
+          questHintRow.style.display = "none";
+
+          stageQuestions = selectedItems.map(function (targetItem) {
+            const distractors = shuffleArray(
+              CURRICULUM_DATA.filter(function (c) { return c.ko !== targetItem.ko; })
+            ).slice(0, 2);
+
+            const options = shuffleArray([
+              { text: targetItem.ko, koHint: null, isCorrect: true },
+              { text: distractors[0].ko, koHint: null, isCorrect: false },
+              { text: distractors[1].ko, koHint: null, isCorrect: false }
+            ]);
+
+            return {
+              typeLabel: "👾 몬스터의 영단어 주문",
+              mainPrompt: targetItem.en,
+              promptKo: null,
+              options: options
+            };
+          });
+        } else {
+          banner.className = "stage-banner conv-stage";
+          bannerText.innerHTML = "💬 Floor " + stageNumber + " · <b>[실전 회화 던전]</b> 영어 질문에 알맞은 영어 답변을 골라 공격하세요!";
+          questScroll.className = "quest-scroll-box conv-mode-box";
+          questHintRow.style.display = "flex";
+
+          stageQuestions = selectedItems.map(function (targetItem) {
+            const distractors = shuffleArray(
+              CURRICULUM_DATA.filter(function (c) { return c.sentEn !== targetItem.sentEn; })
+            ).slice(0, 2);
+
+            const options = shuffleArray([
+              { text: targetItem.sentEn, koHint: targetItem.sentKo, isCorrect: true },
+              { text: distractors[0].sentEn, koHint: distractors[0].sentKo, isCorrect: false },
+              { text: distractors[1].sentEn, koHint: distractors[1].sentKo, isCorrect: false }
+            ]);
+
+            return {
+              typeLabel: "💬 몬스터의 영어 대화 공격",
+              mainPrompt: "“" + targetItem.qEn + "”",
+              promptKo: targetItem.qKo,
+              options: options
+            };
+          });
+        }
+
+        renderBattleQuestion();
+      }
+
+      const btnToggleQuizMeaning = document.getElementById("btnToggleQuizMeaning");
+      const quizMeaningText = document.getElementById("quizMeaningText");
+      const questMainTextEl = document.getElementById("questMainText");
+
+      questMainTextEl.addEventListener("click", function () {
+        const qData = stageQuestions[currentQuestionIdx];
+        if (qData && qData.mainPrompt) {
+          speakEnglishText(qData.mainPrompt);
+        }
+      });
+
+      btnToggleQuizMeaning.addEventListener("click", function () {
+        const isVisible = quizMeaningText.classList.contains("visible");
+        if (isVisible) {
+          quizMeaningText.classList.remove("visible");
+          btnToggleQuizMeaning.textContent = "🔍 질문 뜻 보기";
+        } else {
+          quizMeaningText.classList.add("visible");
+          btnToggleQuizMeaning.textContent = "🙈 질문 뜻 숨기기";
+        }
+      });
+
+      // =========================================================================
+      // 8. 전투 문제 및 3지선다 스킬 카드 렌더링
+      // =========================================================================
+      function renderBattleQuestion() {
+        const qData = stageQuestions[currentQuestionIdx];
+        if (!qData) return;
+
+        isChecking = false;
+        document.getElementById("questTypeLabel").textContent =
+          qData.typeLabel + " (" + (currentQuestionIdx + 1) + " / " + stageQuestions.length + ")";
+        questMainTextEl.innerHTML =
+          '<span>' + qData.mainPrompt + '</span><span class="speak-icon-badge" aria-hidden="true">🔊</span>';
+
+        if (qData.promptKo) {
+          quizMeaningText.textContent = "해석: " + qData.promptKo;
+          quizMeaningText.classList.remove("visible");
+          btnToggleQuizMeaning.textContent = "🔍 질문 뜻 보기";
+        }
+
+        const optionsList = document.getElementById("skillOptionsList");
+        optionsList.innerHTML = "";
+
+        qData.options.forEach(function (opt, idx) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "skill-btn";
+
+          const mainWrap = document.createElement("div");
+          mainWrap.className = "skill-btn-main";
+
+          const numSpan = document.createElement("span");
+          numSpan.className = "skill-key-badge";
+          numSpan.textContent = String(idx + 1);
+
+          const textWrap = document.createElement("div");
+          textWrap.className = "skill-text-wrap";
+
+          const textSpan = document.createElement("span");
+          textSpan.textContent = opt.text;
+          textWrap.appendChild(textSpan);
+
+          let koSpan = null;
+          if (opt.koHint) {
+            koSpan = document.createElement("span");
+            koSpan.className = "skill-ko-hint";
+            koSpan.textContent = opt.koHint;
+            textWrap.appendChild(koSpan);
+          }
+
+          mainWrap.appendChild(numSpan);
+          mainWrap.appendChild(textWrap);
+          btn.appendChild(mainWrap);
+
+          if (opt.koHint && koSpan) {
+            const meaningToggleBtn = document.createElement("span");
+            meaningToggleBtn.className = "btn-opt-meaning";
+            meaningToggleBtn.textContent = "🔍 뜻 보기 (-2점)";
+            meaningToggleBtn.setAttribute("role", "button");
+            meaningToggleBtn.setAttribute("tabindex", "0");
+
+            meaningToggleBtn.addEventListener("click", function (e) {
+              e.stopPropagation();
+              const isShown = koSpan.classList.contains("visible");
+              if (isShown) {
+                koSpan.classList.remove("visible");
+                meaningToggleBtn.textContent = "🔍 뜻 보기 (-2점)";
+              } else {
+                koSpan.classList.add("visible");
+                meaningToggleBtn.textContent = "🙈 숨기기";
+
+                totalScore = Math.max(0, totalScore - 2);
+                updateProfileUI();
+
+                const scoreElem = document.getElementById("profileScore");
+                scoreElem.classList.add("score-down");
+                setTimeout(function () {
+                  scoreElem.classList.remove("score-down");
+                }, 500);
+
+                showToast("💡 스킬 해석 힌트 사용 (-2점 차감)");
+              }
+            });
+
+            btn.appendChild(meaningToggleBtn);
+          }
+
+          btn.addEventListener("click", function () {
+            if (isChecking || btn.classList.contains("wrong")) return;
+
+            totalAttempts += 1;
+
+            if (opt.isCorrect) {
+              isChecking = true;
+              correctAttempts += 1;
+              comboCount += 1;
+              btn.classList.add("correct");
+
+              const allBtns = optionsList.querySelectorAll(".skill-btn");
+              allBtns.forEach(function (b) { b.disabled = true; });
+
+              const comboBonus = comboCount >= 3 ? Math.min(10, comboCount) : 0;
+              const gainedScore = 10 + comboBonus;
+              totalScore += gainedScore;
+
+              monsterHp = Math.max(0, monsterHp - 1);
+              updateProfileUI();
+              updateBattleHpBars();
+
+              const comboBadge = document.getElementById("comboBadge");
+              comboBadge.classList.add("pop");
+              setTimeout(function () { comboBadge.classList.remove("pop"); }, 200);
+
+              triggerAttackAnimation(
+                true,
+                comboBonus > 0 ? "CRITICAL! +" + gainedScore + "점" : "HIT! +10점"
+              );
+
+              setTimeout(function () {
+                if (monsterHp <= 0) {
+                  monstersDefeated += 1;
+                  const bossClearBonus = isBossStage ? 50 : 20;
+                  totalScore += bossClearBonus;
+                  updateProfileUI();
+
+                  const resultBox = document.getElementById("stageResultBox");
+                  resultBox.className = "stage-result-box";
+                  document.getElementById("stageResultTitle").textContent =
+                    (isBossStage ? "👑 보스 몬스터 격파 성공! " : "🎉 몬스터 토벌 성공! ") +
+                    "(클리어 보너스 +" + bossClearBonus + "점 & HP +25 회복)";
+                  document.getElementById("stageResultDesc").textContent =
+                    learningMode === "hybrid" && currentStageType === "vocab"
+                      ? "방금 익힌 단어들이 쓰인 실전 회화 몬스터가 다음 층에서 기다립니다!"
+                      : "더 깊은 던전 층으로 내려가 새로운 몬스터와 대결하세요!";
+                  document.getElementById("nextStageBtn").textContent =
+                    "⚔️ Floor " + (stageNumber + 1) + " 다음 던전으로 돌진하기 →";
+
+                  optionsList.style.display = "none";
+                  resultBox.style.display = "block";
+                  isChecking = false;
+                } else {
+                  currentQuestionIdx += 1;
+                  renderBattleQuestion();
+                }
+              }, 620);
+
+            } else {
+              btn.classList.add("wrong");
+              comboCount = 0;
+
+              totalScore = Math.max(0, totalScore - 5);
+              heroHp = Math.max(0, heroHp - 20);
+              updateProfileUI();
+              updateBattleHpBars();
+
+              const scoreElem = document.getElementById("profileScore");
+              scoreElem.classList.add("score-down");
+              setTimeout(function () {
+                scoreElem.classList.remove("score-down");
+              }, 500);
+
+              triggerAttackAnimation(false, "-20 HP / -5점");
+
+              if (heroHp <= 0) {
+                isChecking = true;
+                setTimeout(function () {
+                  const resultBox = document.getElementById("stageResultBox");
+                  resultBox.className = "stage-result-box defeat-box";
+                  document.getElementById("stageResultTitle").textContent = "💀 용사의 체력이 모두 소진되었습니다!";
+                  document.getElementById("stageResultDesc").textContent =
+                    "처치한 몬스터 기록이 초기화되며 처음 스테이지(Floor 1)부터 다시 시작합니다.";
+                  document.getElementById("nextStageBtn").textContent =
+                    "🔄 Floor 1 처음부터 다시 도전하기";
+
+                  optionsList.style.display = "none";
+                  resultBox.style.display = "block";
+                  isChecking = false;
+                }, 620);
+              }
+            }
+          });
+
+          optionsList.appendChild(btn);
+        });
+      }
+
+      // =========================================================================
+      // 9. 300선 몬스터 도감 / 복습장 모달 로직
+      // =========================================================================
+      let currentModalFilter = "all";
+
+      function renderStudyBook() {
+        const listElem = document.getElementById("studyBookList");
+        if (!listElem) return;
+        listElem.innerHTML = "";
+
+        const searchInput = document.getElementById("studySearchInput");
+        const q = (searchInput ? searchInput.value : "").trim().toLowerCase();
+
+        const filtered = CURRICULUM_DATA.filter(function (item) {
+          if (!q) return true;
+          return (
+            item.en.toLowerCase().indexOf(q) !== -1 ||
+            item.ko.indexOf(q) !== -1 ||
+            item.sentEn.toLowerCase().indexOf(q) !== -1 ||
+            item.sentKo.indexOf(q) !== -1
+          );
+        });
+
+        if (filtered.length === 0) {
+          listElem.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:24px;">검색 결과가 없습니다.</div>';
+          return;
+        }
+
+        filtered.forEach(function (item, index) {
+          const row = document.createElement("div");
+          row.className = "dict-item";
+
+          if (currentModalFilter === "vocab") {
+            row.innerHTML = `
+              <div class="dict-top">
+                <span class="dict-en">${index + 1}. ${item.en}</span>
+                <span class="dict-ko">${item.ko}</span>
+              </div>
+            `;
+          } else if (currentModalFilter === "conv") {
+            row.innerHTML = `
+              <div class="dict-sentence">
+                <b style="color:var(--primary);">${index + 1}. ${item.sentEn}</b><br>
+                <span style="color:#fbbf24;">${item.sentKo}</span>
+              </div>
+            `;
+          } else {
+            row.innerHTML = `
+              <div class="dict-top">
+                <span class="dict-en">${index + 1}. ${item.en}</span>
+                <span class="dict-ko">${item.ko}</span>
+              </div>
+              <div class="dict-sentence">
+                <b>${item.sentEn}</b><br>
+                <span style="color:#94a3b8;">${item.sentKo}</span>
+              </div>
+            `;
+          }
+
+          listElem.appendChild(row);
+        });
+      }
+
+      document.getElementById("btnOpenStudyBook").addEventListener("click", function () {
+        document.getElementById("studySearchInput").value = "";
+        renderStudyBook();
+        document.getElementById("studyBookModal").classList.add("open");
+      });
+
+      document.getElementById("btnCloseStudyBook").addEventListener("click", function () {
+        document.getElementById("studyBookModal").classList.remove("open");
+      });
+
+      document.getElementById("studyBookModal").addEventListener("click", function (e) {
+        if (e.target === this) {
+          this.classList.remove("open");
+        }
+      });
+
+      document.getElementById("studySearchInput").addEventListener("input", function () {
+        renderStudyBook();
+      });
+
+      const filterTabBtns = document.querySelectorAll(".filter-tab-btn");
+      filterTabBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          filterTabBtns.forEach(function (b) { b.classList.remove("active"); });
+          btn.classList.add("active");
+          currentModalFilter = btn.getAttribute("data-filter") || "all";
+          renderStudyBook();
+        });
+      });
+    });
+  </script>
+</body>
+</html>
